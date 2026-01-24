@@ -22,7 +22,7 @@
   </Target>
   <PropertyGroup>
     <_SampleStrings>$(MSBuildThisFileDirectory)Resources/values/strings.xml</_SampleStrings>
-    <_SampleStringsTemplate>$(MSBuildThisFileDirectory)Resources/values/strings.template.xml</_SampleStringsTemplate>
+    <_SampleStringsTemplate>$(MSBuildThisFileDirectory)Resources/values/strings.template</_SampleStringsTemplate>
   </PropertyGroup>
   <Target Name="KapuschFacebookSample_EnsureStrings" BeforeTargets="PrepareForBuild">
     <Copy
@@ -31,6 +31,10 @@
       DestinationFiles="$(_SampleStrings)"
     />
   </Target>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.7.1.1" />
+    <PackageReference Include="Xamarin.AndroidX.CardView" Version="1.0.0.36" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj" />
   </ItemGroup>

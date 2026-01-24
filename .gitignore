@@ -30,3 +30,7 @@ src/**/Native/Android/build/
 # Sample local config
 samples/**/google-services.json
 samples/**/secrets.*
+
+# Sample generated files
+samples/**/AndroidManifest.xml
+samples/**/strings.xml

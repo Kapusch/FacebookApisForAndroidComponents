@@ -18,8 +18,15 @@ public sealed class MainActivity : Activity
 		var button = new Button(this) { Text = "Start Facebook Login" };
 		button.Click += (_, _) =>
 		{
+			var packageName = PackageName;
+			if (string.IsNullOrWhiteSpace(packageName))
+			{
+				Toast.MakeText(this, "Missing package name", ToastLength.Short)?.Show();
+				return;
+			}
+
 			var intent = new Intent();
-			intent.SetClassName(PackageName, AndroidFacebookInterop.LoginActivityClassName);
+			intent.SetClassName(packageName, AndroidFacebookInterop.LoginActivityClassName);
 			StartActivityForResult(intent, LoginRequestCode);
 		};
 
