@@ -1,14 +1,13 @@
-name: ci
+name: sample-android
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build_pack_android:
+  build_android_sample:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,12 +42,6 @@ jobs:
         run: |
           bash src/Kapusch.FacebookApisForAndroidComponents/Native/Android/restore-facebook-aars.sh
 
-      - name: Pack
+      - name: Build Android sample
         run: |
-          dotnet pack src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj \
-            -c Release \
-            -o artifacts/nuget
-      - uses: actions/upload-artifact@v4
-        with:
-          name: nuget
-          path: artifacts/nuget/*.nupkg
+          dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Debug
