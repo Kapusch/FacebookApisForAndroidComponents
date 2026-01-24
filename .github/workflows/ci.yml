@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_pack_android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "microsoft"
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android workload
+        run: |
+          dotnet workload install android
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', '**/*.csproj') }}
+
+      - name: Build Android wrapper
+        run: |
+          bash src/Kapusch.FacebookApisForAndroidComponents/Native/Android/build.sh
+
+      - name: Restore pinned Facebook AARs
+        run: |
+          bash src/Kapusch.FacebookApisForAndroidComponents/Native/Android/restore-facebook-aars.sh
+
+      - name: Pack
+        run: |
+          dotnet pack src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj \
+            -c Release \
+            -o artifacts/nuget
+
+      - name: Build Android sample
+        run: |
+          dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget
+          path: artifacts/nuget/*.nupkg

@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<application>
+		<activity
+			android:name=".FacebookLoginActivity"
+			android:exported="false"
+			android:launchMode="singleTask"
+		/>
+		<receiver android:name=".FacebookLogoutReceiver" android:exported="false">
+			<intent-filter>
+				<action android:name="com.kapusch.facebook.androidinterop.LOGOUT" />
+			</intent-filter>
+		</receiver>
+	</application>
+</manifest>

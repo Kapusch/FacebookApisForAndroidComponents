@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <ApplicationId>com.kapusch.facebookandroid.sample</ApplicationId>
+    <ApplicationTitle>Kapusch Facebook Android Sample</ApplicationTitle>
+    <UseKapuschFacebookAndroidInteropFromSource>true</UseKapuschFacebookAndroidInteropFromSource>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_SampleManifest>$(MSBuildThisFileDirectory)Properties/AndroidManifest.xml</_SampleManifest>
+    <_SampleManifestTemplate>$(MSBuildThisFileDirectory)Properties/AndroidManifest.template.xml</_SampleManifestTemplate>
+  </PropertyGroup>
+  <Target Name="KapuschFacebookSample_EnsureAndroidManifest" BeforeTargets="PrepareForBuild">
+    <Copy
+      Condition="!Exists('$(_SampleManifest)') and Exists('$(_SampleManifestTemplate)')"
+      SourceFiles="$(_SampleManifestTemplate)"
+      DestinationFiles="$(_SampleManifest)"
+    />
+  </Target>
+  <PropertyGroup>
+    <_SampleStrings>$(MSBuildThisFileDirectory)Resources/values/strings.xml</_SampleStrings>
+    <_SampleStringsTemplate>$(MSBuildThisFileDirectory)Resources/values/strings.template.xml</_SampleStringsTemplate>
+  </PropertyGroup>
+  <Target Name="KapuschFacebookSample_EnsureStrings" BeforeTargets="PrepareForBuild">
+    <Copy
+      Condition="!Exists('$(_SampleStrings)') and Exists('$(_SampleStringsTemplate)')"
+      SourceFiles="$(_SampleStringsTemplate)"
+      DestinationFiles="$(_SampleStrings)"
+    />
+  </Target>
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj" />
+  </ItemGroup>
+  <Import
+    Project="$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.targets"
+    Condition="Exists('$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.targets')"
+  />
+</Project>
