@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <DisableKapuschFacebookAndroidNativeAssets Condition="'$(DisableKapuschFacebookAndroidNativeAssets)' == ''">false</DisableKapuschFacebookAndroidNativeAssets>
+    <UseKapuschFacebookAndroidInteropFromSource Condition="'$(UseKapuschFacebookAndroidInteropFromSource)' == ''">false</UseKapuschFacebookAndroidInteropFromSource>
+  </PropertyGroup>
+</Project>

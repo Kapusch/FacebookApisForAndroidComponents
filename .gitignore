@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+artifacts/
+
+# macOS
+.DS_Store
+
+# Gradle / Android
+.gradle/
+**/.gradle/
+local.properties
+**/local.properties
+**/build/
+
+# Local caches used by restore
+.kapusch/
+
+# Native build output (repo-only)
+src/**/Native/Android/build/
+
+# Sample local config
+samples/**/google-services.json
+samples/**/secrets.*
+
+# Sample generated files
+samples/**/AndroidManifest.xml
+samples/**/strings.xml

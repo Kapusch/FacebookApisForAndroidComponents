@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Native/**</DefaultItemExcludes>
+    <PackageId>Kapusch.Facebook.Android</PackageId>
+    <Authors>Kapusch</Authors>
+    <Description>Facebook Android auth interop wrapper + classic AAR packaging.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Kapusch/FacebookApisForAndroidComponents</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <AssemblyName>Kapusch.Facebook.Android</AssemblyName>
+    <RootNamespace>Kapusch.Facebook.Android</RootNamespace>
+    <Version>0.1.0</Version>
+    <PackageReadmeFile>nuget-readme.md</PackageReadmeFile>
+    <InteropAndroidWrapperAar
+      Condition="'$(InteropAndroidWrapperAar)' == '' and Exists('Native/Android/build/aar/kfb-facebookinterop-release.aar')"
+      >Native/Android/build/aar/kfb-facebookinterop-release.aar</InteropAndroidWrapperAar
+    >
+    <FacebookAndroidAarsDir
+      Condition="'$(FacebookAndroidAarsDir)' == '' and Exists('Native/Android/build/deps')"
+      >Native/Android/build/deps</FacebookAndroidAarsDir
+    >
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidAarLibrary Remove="Native/**" />
+    <AndroidExternalJavaLibrary Remove="Native/**" />
+    <AndroidJavaSource Remove="Native/**" />
+    <AndroidLibrary Remove="Native/**" />
+    <Content Remove="Native/**" />
+    <EmbeddedResource Remove="Native/**" />
+    <LibraryProjectZip Remove="Native/**" />
+    <None Remove="Native/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="buildTransitive/**" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="nuget-readme.md" Pack="true" PackagePath="/" />
+    <None Include="../../THIRD_PARTY_NOTICES.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(InteropAndroidWrapperAar)' != '' and Exists('$(InteropAndroidWrapperAar)')">
+    <None Include="$(InteropAndroidWrapperAar)" Pack="true" PackagePath="android/aar/" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(FacebookAndroidAarsDir)' != '' and Exists('$(FacebookAndroidAarsDir)')">
+    <None Include="$(FacebookAndroidAarsDir)/*.aar" Pack="true" PackagePath="android/deps/" />
+  </ItemGroup>
+  <Target
+    Name="_KapuschFacebookAndroid_CheckNativeAssets"
+    BeforeTargets="GenerateNuspec"
+    Condition="'$(IsPackable)' == 'true'"
+  >
+    <Error
+      Condition="'$(InteropAndroidWrapperAar)' == '' or !Exists('$(InteropAndroidWrapperAar)')"
+      Text="Missing Android wrapper AAR. Build it first via src/Kapusch.FacebookApisForAndroidComponents/Native/Android/build.sh or provide InteropAndroidWrapperAar."
+    />
+    <Error
+      Condition="'$(FacebookAndroidAarsDir)' == '' or !Exists('$(FacebookAndroidAarsDir)')"
+      Text="Missing Facebook Android AARs. Run src/Kapusch.FacebookApisForAndroidComponents/Native/Android/restore-facebook-aars.sh or provide FacebookAndroidAarsDir."
+    />
+  </Target>
+</Project>

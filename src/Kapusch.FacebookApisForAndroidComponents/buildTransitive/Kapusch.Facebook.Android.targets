@@ -1,0 +1,58 @@
+<Project>
+  <PropertyGroup>
+    <_KapuschFacebookAndroidPackageRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</_KapuschFacebookAndroidPackageRoot>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UseKapuschFacebookAndroidInteropFromSource)' == 'true'">
+    <_KapuschFacebookAndroidSourceRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Native/Android/build'))</_KapuschFacebookAndroidSourceRoot>
+  </PropertyGroup>
+
+  <Target
+    Name="KapuschFacebookInterop_InjectAndroidAarLibraries_Source"
+    BeforeTargets="_ResolveLibraryProjectImports"
+    Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(DisableKapuschFacebookAndroidNativeAssets)' != 'true' and '$(UseKapuschFacebookAndroidInteropFromSource)' == 'true'"
+  >
+    <PropertyGroup>
+      <_KapuschFacebookAndroidWrapperAar>$([System.IO.Path]::Combine('$(_KapuschFacebookAndroidSourceRoot)', 'aar', 'kfb-facebookinterop-release.aar'))</_KapuschFacebookAndroidWrapperAar>
+      <_KapuschFacebookAndroidDepsDir>$([System.IO.Path]::Combine('$(_KapuschFacebookAndroidSourceRoot)', 'deps'))</_KapuschFacebookAndroidDepsDir>
+    </PropertyGroup>
+
+    <Error
+      Condition="!Exists('$(_KapuschFacebookAndroidWrapperAar)')"
+      Text="Kapusch.Facebook.Android source-mode: missing wrapper AAR at '$(_KapuschFacebookAndroidWrapperAar)'. Build it first via src/Kapusch.FacebookApisForAndroidComponents/Native/Android/build.sh."
+    />
+    <Error
+      Condition="!Exists('$(_KapuschFacebookAndroidDepsDir)')"
+      Text="Kapusch.Facebook.Android source-mode: missing deps dir at '$(_KapuschFacebookAndroidDepsDir)'. Run src/Kapusch.FacebookApisForAndroidComponents/Native/Android/restore-facebook-aars.sh."
+    />
+
+    <ItemGroup>
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidWrapperAar)" />
+      <!-- Allowlist only: avoid bringing in AndroidX duplicates MAUI typically provides. -->
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-bolts-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-common-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" />
+    </ItemGroup>
+  </Target>
+
+  <Target
+    Name="KapuschFacebookInterop_InjectAndroidAarLibraries"
+    BeforeTargets="_ResolveLibraryProjectImports"
+    Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(DisableKapuschFacebookAndroidNativeAssets)' != 'true' and '$(UseKapuschFacebookAndroidInteropFromSource)' != 'true'"
+  >
+    <PropertyGroup>
+      <_KapuschFacebookAndroidWrapperAar>$([System.IO.Path]::Combine('$(_KapuschFacebookAndroidPackageRoot)', 'android', 'aar', 'kfb-facebookinterop-release.aar'))</_KapuschFacebookAndroidWrapperAar>
+      <_KapuschFacebookAndroidDepsDir>$([System.IO.Path]::Combine('$(_KapuschFacebookAndroidPackageRoot)', 'android', 'deps'))</_KapuschFacebookAndroidDepsDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidWrapperAar)" />
+      <!-- Allowlist only: avoid bringing in AndroidX duplicates MAUI typically provides. -->
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-bolts-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-common-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
+      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" />
+    </ItemGroup>
+  </Target>
+</Project>
