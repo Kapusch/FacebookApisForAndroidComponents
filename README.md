@@ -1,6 +1,6 @@
 # FacebookApisForAndroidComponents
 
-Public OSS repository that packages **Facebook Login for Android** into a consumable .NET NuGet.
+Public OSS repository that packages selected Facebook Android features into a consumable .NET NuGet.
 
 ## Package
 
@@ -9,9 +9,12 @@ Public OSS repository that packages **Facebook Login for Android** into a consum
 ## What this repo ships
 
 A NuGet package that:
-- provides a small managed API for starting a Facebook Login flow on Android, and
+- provides managed entry points for Facebook Login and photo sharing, and
 - redistributes the required **Facebook Android SDK AARs** inside the `.nupkg` (classic/native packaging),
 - injects the AARs into consuming apps via `buildTransitive` `AndroidAarLibrary` items.
+
+Select `KapuschFacebookFeatures=Login`, `Share`, or `Login;Share`. The default is
+`Login`; only selected native AARs are injected into the consuming artifact.
 
 ## Third-party licenses
 

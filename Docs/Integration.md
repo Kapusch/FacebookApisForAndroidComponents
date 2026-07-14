@@ -2,6 +2,8 @@
 
 This package injects a small Android Activity (provided by an embedded AAR) that runs the Facebook Login flow and returns its result via `Intent` extras.
 
+Set `KapuschFacebookFeatures` to `Login` (default), `Share`, or `Login;Share`.
+
 ## Required AndroidManifest entries
 
 You must include the required Meta/Facebook Android SDK entries in your app manifest (example only; use resources, do not hardcode secrets):
@@ -26,3 +28,11 @@ Then parse the `Intent` extras:
 ## Sign-out
 
 Call `AndroidFacebookInterop.SendSignOutBroadcast(context)`.
+
+## Photo sharing
+
+With the `Share` feature selected, start
+`AndroidFacebookInterop.ShareActivityClassName` and pass a JPEG file path using
+`AndroidFacebookInterop.ExtraShareImagePath`. Read `ExtraStatus` and
+`ExtraErrorCode` from the activity result. The wrapper uses `SharePhotoContent`
+and never injects a message.
