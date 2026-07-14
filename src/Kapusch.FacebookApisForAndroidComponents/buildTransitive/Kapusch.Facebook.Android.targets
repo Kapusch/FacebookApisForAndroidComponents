@@ -32,7 +32,8 @@
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-bolts-*.aar" />
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-common-*.aar" />
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
-      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" />
+	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" Condition="'$(_KapuschFacebookLoginEnabled)' == 'True'" />
+	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-share-*.aar" Condition="'$(_KapuschFacebookShareEnabled)' == 'True'" />
     </ItemGroup>
   </Target>
 
@@ -52,7 +53,8 @@
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-bolts-*.aar" />
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-common-*.aar" />
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
-      <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" />
+	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" Condition="'$(_KapuschFacebookLoginEnabled)' == 'True'" />
+	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-share-*.aar" Condition="'$(_KapuschFacebookShareEnabled)' == 'True'" />
     </ItemGroup>
   </Target>
 </Project>

@@ -25,4 +25,5 @@ android {
 
 dependencies {
 	implementation("com.facebook.android:facebook-login:18.1.3")
+	implementation("com.facebook.android:facebook-share:18.1.3")
 }
