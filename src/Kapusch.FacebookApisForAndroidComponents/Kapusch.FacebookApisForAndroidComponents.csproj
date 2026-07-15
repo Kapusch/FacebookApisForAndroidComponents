@@ -15,7 +15,7 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <AssemblyName>Kapusch.Facebook.Android</AssemblyName>
     <RootNamespace>Kapusch.Facebook.Android</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>1.1.0</Version>
     <PackageReadmeFile>nuget-readme.md</PackageReadmeFile>
     <InteropAndroidWrapperAar
       Condition="'$(InteropAndroidWrapperAar)' == '' and Exists('Native/Android/build/aar/kfb-facebookinterop-release.aar')"

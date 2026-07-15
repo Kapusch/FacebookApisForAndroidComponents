@@ -2,6 +2,11 @@ name: publish
 
 on:
   workflow_dispatch:
+    inputs:
+      manual_version:
+        description: 'Force a specific version for NuGet.org publish (e.g., 1.0.0 or 1.0.0-rc.1). If empty, defaults to auto-generated preview for GitHub Packages.'
+        required: false
+        type: string
   push:
     tags:
       - "v*"
@@ -13,6 +18,10 @@ permissions:
 jobs:
   pack_and_publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,18 +31,41 @@ jobs:
         id: version
         shell: bash
         run: |
-          if [[ "${{ github.ref }}" =~ ^refs/tags/v ]]; then
-            REF="${{ github.ref }}"
+          REF="${{ github.ref }}"
+          MANUAL_VERSION="${{ github.event.inputs.manual_version }}"
+          CSPROJ="src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj"
+          BASE_VERSION=$(grep -oE '<Version>[^<]+' "$CSPROJ" | head -n 1 | sed 's/<Version>//' || echo "0.1.0")
+
+          if [[ -n "$MANUAL_VERSION" ]]; then
+            VERSION="$MANUAL_VERSION"
+            PUBLISH_TARGET="nuget"
+            echo "Manual version provided ($VERSION). Triggering NuGet.org publish."
+          elif [[ "$REF" =~ ^refs/tags/v ]]; then
             VERSION="${REF#refs/tags/v}"
+            PUBLISH_TARGET="nuget"
           else
-            CSPROJ="src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj"
-            BASE_VERSION=$(grep -oE '<Version>[^<]+' "$CSPROJ" | head -n 1 | sed 's/<Version>//' || echo "0.1.0")
             COMMIT_SHORT=$(git rev-parse --short HEAD)
             RUN_NUMBER="${{ github.run_number }}"
-            VERSION="${BASE_VERSION}-prerelease.${RUN_NUMBER}.${COMMIT_SHORT}"
+            VERSION="${BASE_VERSION}-preview.${RUN_NUMBER}.${COMMIT_SHORT}"
+            PUBLISH_TARGET="github"
           fi
+
+          if [[ "$PUBLISH_TARGET" == "nuget" ]]; then
+            git fetch origin master
+            if ! git merge-base --is-ancestor "${{ github.sha }}" origin/master; then
+              echo "ERROR: NuGet.org releases must be reachable from origin/master."
+              exit 1
+            fi
+            if [[ -n "$MANUAL_VERSION" && "$REF" != "refs/heads/master" ]]; then
+              echo "ERROR: Manual NuGet.org releases must be dispatched from master."
+              exit 1
+            fi
+          fi
+
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "publish_target=${PUBLISH_TARGET}" >> "$GITHUB_OUTPUT"
           echo "Package version: ${VERSION}"
+          echo "Publish target: ${PUBLISH_TARGET}"
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -72,7 +104,23 @@ jobs:
             -o artifacts/nuget \
             /p:PackageVersion="${{ steps.version.outputs.version }}"
 
+      - name: Push to NuGet.org
+        if: steps.version.outputs.publish_target == 'nuget'
+        uses: NuGet/login@v1
+        id: nuget_login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        if: steps.version.outputs.publish_target == 'nuget'
+        run: |
+          dotnet nuget push artifacts/nuget/*.nupkg \
+            --api-key "${{ steps.nuget_login.outputs.NUGET_API_KEY }}" \
+            --source "https://api.nuget.org/v3/index.json" \
+            --skip-duplicate
+
       - name: Push to GitHub Packages
+        if: steps.version.outputs.publish_target == 'github'
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
