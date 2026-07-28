@@ -36,3 +36,10 @@ With the `Share` feature selected, start
 `AndroidFacebookInterop.ExtraShareImagePath`. Read `ExtraStatus` and
 `ExtraErrorCode` from the activity result. The wrapper uses `SharePhotoContent`
 and never injects a message.
+
+The wrapper records the ShareDialog mode availability in Android logs. When no
+supported dialog mode is available, `ExtraStatus` is `failed` and
+`ExtraErrorCode` reports
+`share_dialog_unavailable_native_<0|1>_web_<0|1>`. Consumers may use that
+diagnostic to offer an explicit Android image-intent fallback. The wrapper does
+not silently change transport.
