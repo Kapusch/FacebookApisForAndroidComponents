@@ -5,16 +5,20 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
 import com.facebook.share.Sharer;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 
 public final class FacebookShareActivity extends Activity {
+	private static final String LOG_TAG = "KapuschFacebookShare";
 	private CallbackManager callbackManager;
 	private Bitmap bitmap;
 
@@ -55,8 +59,31 @@ public final class FacebookShareActivity extends Activity {
 
 		SharePhoto photo = new SharePhoto.Builder().setBitmap(bitmap).build();
 		SharePhotoContent content = new SharePhotoContent.Builder().addPhoto(photo).build();
-		if (!dialog.canShow(content, ShareDialog.Mode.AUTOMATIC)) {
-			completeFailed("share_dialog_unavailable");
+		boolean automaticAvailable = dialog.canShow(content, ShareDialog.Mode.AUTOMATIC);
+		boolean nativeAvailable = dialog.canShow(content, ShareDialog.Mode.NATIVE);
+		boolean webAvailable = dialog.canShow(content, ShareDialog.Mode.WEB);
+		boolean feedAvailable = dialog.canShow(content, ShareDialog.Mode.FEED);
+		boolean nativePhotoCapabilityAvailable = ShareDialog.canShow(SharePhotoContent.class);
+		boolean accessTokenActive = AccessToken.isCurrentAccessTokenActive();
+
+		Log.i(
+			LOG_TAG,
+			"ShareDialog availability"
+				+ " sdkInitialized=" + FacebookSdk.isInitialized()
+				+ " accessTokenActive=" + accessTokenActive
+				+ " automatic=" + automaticAvailable
+				+ " native=" + nativeAvailable
+				+ " nativePhotoCapability=" + nativePhotoCapabilityAvailable
+				+ " web=" + webAvailable
+				+ " feed=" + feedAvailable
+		);
+
+		if (!automaticAvailable) {
+			completeFailed(
+				"share_dialog_unavailable"
+					+ "_native_" + availabilityFlag(nativeAvailable)
+					+ "_web_" + availabilityFlag(webAvailable)
+			);
 			return;
 		}
 		dialog.show(content, ShareDialog.Mode.AUTOMATIC);
@@ -68,6 +95,10 @@ public final class FacebookShareActivity extends Activity {
 		if (callbackManager != null) {
 			callbackManager.onActivityResult(requestCode, resultCode, data);
 		}
+	}
+
+	private static String availabilityFlag(boolean available) {
+		return available ? "1" : "0";
 	}
 
 	private void completeFailed(String errorCode) {
