@@ -18,6 +18,13 @@ namespace Kapusch.Facebook.Android;
 /// meta-data on later launches. Apply the consumer's consent state explicitly on every launch.
 /// </para>
 /// <para>
+/// Turning switches off does not stop the SDK for the current process: it stays fully initialized,
+/// keeps flushing queued events and, once <see cref="ActivateApp"/> or automatic logging started
+/// activity tracking, keeps logging activation on every activity resume. Withdrawal fully applies
+/// on the next process start. Until then, stop calling the <c>Log*</c> methods and set
+/// <see cref="FacebookAppEventsFlushBehavior.ExplicitOnly"/> without calling <see cref="Flush"/>.
+/// </para>
+/// <para>
 /// Every setter, the identity methods and the event methods throw
 /// <see cref="Java.Lang.IllegalStateException"/> until <c>FacebookSdk.sdkInitialize</c> ran (the
 /// default <c>FacebookInitProvider</c> runs it at process start). Before that the SDK would drop
@@ -115,7 +122,8 @@ public static class FacebookAppEvents
 
 	/// <summary>
 	/// Sets the persisted auto-init flag. <see langword="true"/> also fully initializes the SDK
-	/// (<c>FacebookSdk.setAutoInitEnabled</c>).
+	/// (<c>FacebookSdk.setAutoInitEnabled</c>). <see langword="false"/> only affects the next process
+	/// start: an SDK already fully initialized stays so, and keeps flushing queued events.
 	/// </summary>
 	public static void SetAutoInitEnabled(bool enabled) => CallVoid("setAutoInitEnabled", "(Z)V", new JValue(enabled));
 
@@ -123,6 +131,8 @@ public static class FacebookAppEvents
 	/// Sets the persisted automatic App Events logging flag. <see langword="true"/> starts activity
 	/// tracking, which requires an initialized SDK. Automatic logging covers the install ping, app
 	/// activation and, when enabled in Events Manager, in-app purchases and subscriptions.
+	/// <see langword="false"/> does not stop activity tracking already started in this process; it
+	/// applies from the next process start.
 	/// </summary>
 	public static void SetAutoLogAppEventsEnabled(bool enabled) =>
 		CallVoid("setAutoLogAppEventsEnabled", "(Z)V", new JValue(enabled));
@@ -188,11 +198,16 @@ public static class FacebookAppEvents
 	}
 
 	/// <summary>
-	/// Logs app activation and the one-time install ping, then starts automatic activate/deactivate
-	/// tracking (<c>AppEventsLogger.activateApp</c>). Call it when automatic logging is disabled and
-	/// the consumer still wants install and launch measurement. Call it once the SDK is fully
-	/// initialized (<see cref="SetAutoInitEnabled"/> or <see cref="InitializeSdk"/>); before that the
-	/// SDK discards the install ping response and only retries on a later activation.
+	/// Sends the one-time install ping and starts activation tracking
+	/// (<c>AppEventsLogger.activateApp</c>): the SDK logs <c>fb_mobile_activate_app</c> and
+	/// deactivation from the next activity resume on. An activity already resumed when this runs is
+	/// not counted, so call it on every launch before the first activity resumes, for example from
+	/// <c>Application.OnCreate</c> or <c>MainActivity.OnCreate</c>. When it runs right after a consent
+	/// dialog, that session is only counted from the next resume. Use it when automatic logging is
+	/// disabled and the consumer still wants install and launch measurement. Call it once the SDK is
+	/// fully initialized (<see cref="SetAutoInitEnabled"/> or <see cref="InitializeSdk"/>); before
+	/// that the SDK discards the install ping response and only retries on a later activation.
+	/// Tracking cannot be stopped until the process ends.
 	/// </summary>
 	public static void ActivateApp(Context? context = null) =>
 		CallVoid("activateApp", "(Landroid/content/Context;)V", new JValue(ResolveContext(context)));

@@ -83,10 +83,13 @@ public sealed class MainActivity : Activity
 
 	private static void GrantConsent()
 	{
+		FacebookAppEvents.SetFlushBehavior(FacebookAppEventsFlushBehavior.Auto);
 		FacebookAppEvents.SetAutoInitEnabled(true);
 		FacebookAppEvents.SetAdvertiserIdCollectionEnabled(true);
-		// Keep automatic logging off (no purchase auto-logging) and log activation explicitly; this
-		// still sends the one-time install ping.
+		// Keep automatic logging off (no purchase auto-logging) and log activation explicitly.
+		// ActivateApp sends the one-time install ping and logs activation from the next activity
+		// resume on; this screen is already resumed, so the current session is not counted. A real
+		// app calls it on every launch with consent, before the first activity resumes.
 		FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
 		FacebookAppEvents.ActivateApp();
 	}
@@ -98,6 +101,9 @@ public sealed class MainActivity : Activity
 		FacebookAppEvents.SetAutoInitEnabled(false);
 		FacebookAppEvents.ClearUserId();
 		FacebookAppEvents.ClearUserData();
+		// The SDK stays fully initialized and keeps tracking activation until the process restarts.
+		// Stop sending for this process; a real app also stops calling the Log* methods.
+		FacebookAppEvents.SetFlushBehavior(FacebookAppEventsFlushBehavior.ExplicitOnly);
 	}
 
 	private void RefreshStatus()

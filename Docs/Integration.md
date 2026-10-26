@@ -135,7 +135,8 @@ SDK (see the strictest setup below).
    ```
 
 2. On every launch, apply the stored consent explicitly, because the runtime
-   values persist across launches:
+   values persist across launches. Do it before the first activity resumes
+   (`Application.OnCreate`, or `MainActivity.OnCreate` before `OnResume`):
 
    ```csharp
    if (consentGranted)
@@ -145,12 +146,18 @@ SDK (see the strictest setup below).
        // Either let the SDK log automatically ...
        // FacebookAppEvents.SetAutoLogAppEventsEnabled(true);
        // ... or keep automatic logging off and log activation yourself. ActivateApp()
-       // still sends the one-time install ping and starts activate/deactivate tracking.
-       // Call it after auto-init is enabled, or the SDK discards the ping response.
+       // sends the one-time install ping and starts activation tracking, which logs
+       // fb_mobile_activate_app from the next activity resume on. Call it after
+       // auto-init is enabled, or the SDK discards the ping response.
        FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
        FacebookAppEvents.ActivateApp();
    }
    ```
+
+   When consent is first granted from a dialog, the activity is already
+   resumed, so that session's activation is only counted from the next resume.
+   Do not log `fb_mobile_activate_app` yourself to make up for it: the SDK owns
+   session counting.
 
 3. On withdrawal, turn everything off and clear the identifiers you set:
 
@@ -160,10 +167,26 @@ SDK (see the strictest setup below).
    FacebookAppEvents.SetAutoInitEnabled(false);
    FacebookAppEvents.ClearUserId();
    FacebookAppEvents.ClearUserData();
+   // Stop sending for the rest of this process (in memory only; resets on restart).
+   FacebookAppEvents.SetFlushBehavior(FacebookAppEventsFlushBehavior.ExplicitOnly);
    ```
 
-   Stop logging events manually as well. The SDK cannot delete events it
-   already sent; that goes through Meta's data deletion process.
+   Withdrawal fully takes effect on the next process start. Until then the
+   SDK stays fully initialized: it keeps flushing queued events and, once
+   `ActivateApp()` or automatic logging started activity tracking, keeps
+   logging `fb_mobile_activate_app` and deactivation on every resume; none of
+   the switches above stops that. So:
+
+   - gate your own `Log*` calls on the consent state, so manual events stop at
+     once;
+   - set `ExplicitOnly` and do not call `Flush()` until the process restarts,
+     so nothing more is sent in this process;
+   - events already queued (including the activation events logged meanwhile)
+     stay in the SDK's disk queue, and a later fully initialized session (after
+     consent is granted again) sends them.
+
+   The SDK cannot delete events it already sent; that goes through Meta's data
+   deletion process.
 
 The `FacebookInitProvider` merged from facebook-core still calls
 `FacebookSdk.sdkInitialize` at process start, with `AutoInitEnabled=false`. The
