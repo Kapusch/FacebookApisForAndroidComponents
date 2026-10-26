@@ -2,7 +2,9 @@
 
 Small, buildable Android sample project for validating:
 - Managed API compilation
-- Native asset injection via `AndroidAarLibrary` (wrapper + Facebook AARs)
+- Native asset injection via `AndroidAarLibrary` (wrapper + Facebook AARs) for
+  `KapuschFacebookFeatures=Login;Share;AppEvents`
+- The App Events facade surviving R8 shrinking (Release builds use `AndroidLinkTool=r8`)
 
 No secrets are committed.
 
@@ -23,3 +25,27 @@ Build the sample:
 ```bash
 dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Debug
 ```
+
+Build with R8 and check the shrunk APK still contains the facade:
+```bash
+dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Release
+python3 scripts/verify-interop.py apk \
+  samples/Kapusch.Facebook.Android.Sample/bin/Release/net10.0-android/com.kapusch.facebookandroid.sample-Signed.apk \
+  --feature Login --feature Share
+```
+
+## Running end to end
+
+The first build copies `Properties/AndroidManifest.template.xml` and
+`Resources/values/strings.template` to untracked `AndroidManifest.xml` and
+`strings.xml`. Put your own Meta app ID, client token and `fb<app id>` scheme in
+the untracked `strings.xml` only; never commit them.
+
+The manifest template sets every automatic collection switch to `false`
+(`AutoInitEnabled`, `AutoLogAppEventsEnabled`, `AdvertiserIDCollectionEnabled`,
+`AutoLogMetaDataEnabled`, `AutoLogProductImprovementEnabled`). The sample's
+"Grant ads consent" button enables auto-init and advertiser ID collection, then
+calls `ActivateApp()` with automatic logging still off; "Withdraw ads consent"
+reverts them. Debug builds enable `SetDebugLoggingEnabled(true)`, so logged and
+flushed events appear in `adb logcat`. Use Meta Events Manager > Test events to
+confirm delivery.

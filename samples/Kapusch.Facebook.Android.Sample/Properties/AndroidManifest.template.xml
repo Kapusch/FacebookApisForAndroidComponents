@@ -11,6 +11,12 @@
       android:name="com.facebook.sdk.ClientToken"
       android:value="@string/facebook_client_token"
     />
+    <!-- Consent gating: nothing is collected automatically until the app enables it at runtime. -->
+    <meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false" />
+    <meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="false" />
+    <meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="false" />
+    <meta-data android:name="com.facebook.sdk.AutoLogMetaDataEnabled" android:value="false" />
+    <meta-data android:name="com.facebook.sdk.AutoLogProductImprovementEnabled" android:value="false" />
     <!-- Facebook SDK activities (example only; align with Facebook docs) -->
     <activity
       android:name="com.facebook.FacebookActivity"

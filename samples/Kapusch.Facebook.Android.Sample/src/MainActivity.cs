@@ -10,27 +10,121 @@ namespace Kapusch.Facebook.Android.Sample;
 public sealed class MainActivity : Activity
 {
 	private const int LoginRequestCode = 4242;
+	private TextView? _status;
 
 	protected override void OnCreate(Bundle? savedInstanceState)
 	{
 		base.OnCreate(savedInstanceState);
 
-		var button = new Button(this) { Text = "Start Facebook Login" };
+		var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+		_status = new TextView(this);
+		layout.AddView(_status);
+
+		AddButton(layout, "Start Facebook Login", StartLogin);
+
+		// App Events: the manifest template disables every automatic collection switch, so nothing
+		// is sent until the user grants consent here. A real app persists the choice and re-applies
+		// it on every launch because the SDK persists runtime values over the manifest defaults.
+		AddButton(layout, "Grant ads consent", GrantConsent);
+		AddButton(layout, "Withdraw ads consent", WithdrawConsent);
+		AddButton(
+			layout,
+			"Log StartTrial (test values)",
+			() => FacebookAppEvents.LogStartTrial(value: 0m, currencyIsoCode: "USD", orderId: "sample-order")
+		);
+		AddButton(
+			layout,
+			"Log Subscribe (test values)",
+			() => FacebookAppEvents.LogSubscribe(value: 9.99m, currencyIsoCode: "USD", orderId: "sample-order")
+		);
+		AddButton(
+			layout,
+			"Log custom event",
+			() =>
+				FacebookAppEvents.LogEvent(
+					FacebookAppEventNames.ViewedContent,
+					new Dictionary<string, object>
+					{
+						[FacebookAppEventParameterNames.ContentType] = "sample",
+						[FacebookAppEventParameterNames.ContentId] = "item-1",
+					}
+				)
+		);
+		AddButton(layout, "Flush", FacebookAppEvents.Flush);
+
+		var scroll = new ScrollView(this);
+		scroll.AddView(layout);
+		SetContentView(scroll);
+
+#if DEBUG
+		FacebookAppEvents.SetDebugLoggingEnabled(true);
+#endif
+		RefreshStatus();
+	}
+
+	private void AddButton(LinearLayout layout, string text, Action action)
+	{
+		var button = new Button(this) { Text = text };
 		button.Click += (_, _) =>
 		{
-			var packageName = PackageName;
-			if (string.IsNullOrWhiteSpace(packageName))
+			try
 			{
-				Toast.MakeText(this, "Missing package name", ToastLength.Short)?.Show();
-				return;
+				action();
+			}
+			catch (Exception ex)
+			{
+				Toast.MakeText(this, $"{ex.GetType().Name}: {ex.Message}", ToastLength.Long)?.Show();
 			}
 
-			var intent = new Intent();
-			intent.SetClassName(packageName, AndroidFacebookInterop.LoginActivityClassName);
-			StartActivityForResult(intent, LoginRequestCode);
+			RefreshStatus();
 		};
+		layout.AddView(button);
+	}
 
-		SetContentView(button);
+	private static void GrantConsent()
+	{
+		FacebookAppEvents.SetAutoInitEnabled(true);
+		FacebookAppEvents.SetAdvertiserIdCollectionEnabled(true);
+		// Keep automatic logging off (no purchase auto-logging) and log activation explicitly; this
+		// still sends the one-time install ping.
+		FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
+		FacebookAppEvents.ActivateApp();
+	}
+
+	private static void WithdrawConsent()
+	{
+		FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
+		FacebookAppEvents.SetAdvertiserIdCollectionEnabled(false);
+		FacebookAppEvents.SetAutoInitEnabled(false);
+		FacebookAppEvents.ClearUserId();
+		FacebookAppEvents.ClearUserData();
+	}
+
+	private void RefreshStatus()
+	{
+		if (_status is null)
+			return;
+
+		_status.Text =
+			$"SDK initialized: {FacebookAppEvents.IsSdkInitialized}, fully: {FacebookAppEvents.IsSdkFullyInitialized}\n"
+			+ $"Auto-init: {FacebookAppEvents.IsAutoInitEnabled}, auto-log: {FacebookAppEvents.IsAutoLogAppEventsEnabled}, "
+			+ $"advertiser ID: {FacebookAppEvents.IsAdvertiserIdCollectionEnabled}\n"
+			+ $"Metadata: {FacebookAppEvents.IsAutoLogMetaDataEnabled}, product improvement: {FacebookAppEvents.IsAutoLogProductImprovementEnabled}\n"
+			+ $"Anonymous ID: {FacebookAppEvents.GetAnonymousId()}";
+	}
+
+	private void StartLogin()
+	{
+		var packageName = PackageName;
+		if (string.IsNullOrWhiteSpace(packageName))
+		{
+			Toast.MakeText(this, "Missing package name", ToastLength.Short)?.Show();
+			return;
+		}
+
+		var intent = new Intent();
+		intent.SetClassName(packageName, AndroidFacebookInterop.LoginActivityClassName);
+		StartActivityForResult(intent, LoginRequestCode);
 	}
 
 	protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
