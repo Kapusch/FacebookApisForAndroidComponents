@@ -21,6 +21,10 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidCreateProguardMappingFile>true</AndroidCreateProguardMappingFile>
   </PropertyGroup>
+  <!-- CI narrows the sample's ABIs without passing RuntimeIdentifiers globally to the library. -->
+  <PropertyGroup Condition="'$(SampleRuntimeIdentifiers)' != ''">
+    <RuntimeIdentifiers>$(SampleRuntimeIdentifiers)</RuntimeIdentifiers>
+  </PropertyGroup>
   <PropertyGroup>
     <_SampleManifest>$(MSBuildThisFileDirectory)Properties/AndroidManifest.xml</_SampleManifest>
     <_SampleManifestTemplate>$(MSBuildThisFileDirectory)Properties/AndroidManifest.template.xml</_SampleManifestTemplate>

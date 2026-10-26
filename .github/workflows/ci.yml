@@ -75,7 +75,7 @@ jobs:
         run: |
           dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj \
             -c Release \
-            -p:RuntimeIdentifiers=android-arm64
+            -p:SampleRuntimeIdentifiers=android-arm64
           python3 scripts/verify-interop.py apk \
             samples/Kapusch.Facebook.Android.Sample/bin/Release/net10.0-android/com.kapusch.facebookandroid.sample-Signed.apk \
             --feature Login --feature Share
