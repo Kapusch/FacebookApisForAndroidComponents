@@ -5,6 +5,8 @@
     <_KapuschFacebookFeaturesDelimited>;$([System.String]::Copy('$(KapuschFacebookFeatures)').Replace(' ', ''));</_KapuschFacebookFeaturesDelimited>
     <_KapuschFacebookLoginEnabled>$([System.String]::Copy('$(_KapuschFacebookFeaturesDelimited)').Contains(';Login;'))</_KapuschFacebookLoginEnabled>
     <_KapuschFacebookShareEnabled>$([System.String]::Copy('$(_KapuschFacebookFeaturesDelimited)').Contains(';Share;'))</_KapuschFacebookShareEnabled>
+    <_KapuschFacebookAppEventsEnabled>$([System.String]::Copy('$(_KapuschFacebookFeaturesDelimited)').Contains(';AppEvents;'))</_KapuschFacebookAppEventsEnabled>
+    <_KapuschFacebookAppEventsProguardFile>$([System.IO.Path]::Combine('$(MSBuildThisFileDirectory)', 'proguard', 'kapusch-facebook-appevents.pro'))</_KapuschFacebookAppEventsProguardFile>
     <_KapuschFacebookAndroidPackageRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</_KapuschFacebookAndroidPackageRoot>
   </PropertyGroup>
 
@@ -39,6 +41,8 @@
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
 	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" Condition="'$(_KapuschFacebookLoginEnabled)' == 'True'" />
 	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-share-*.aar" Condition="'$(_KapuschFacebookShareEnabled)' == 'True'" />
+      <!-- AppEvents needs no extra AAR: the facade ships in the wrapper and facebook-core is always injected. -->
+      <ProguardConfiguration Include="$(_KapuschFacebookAppEventsProguardFile)" Condition="'$(_KapuschFacebookAppEventsEnabled)' == 'True'" />
     </ItemGroup>
   </Target>
 
@@ -60,6 +64,27 @@
       <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-core-*.aar" />
 	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-login-*.aar" Condition="'$(_KapuschFacebookLoginEnabled)' == 'True'" />
 	  <AndroidAarLibrary Include="$(_KapuschFacebookAndroidDepsDir)/facebook-share-*.aar" Condition="'$(_KapuschFacebookShareEnabled)' == 'True'" />
+      <!-- AppEvents needs no extra AAR: the facade ships in the wrapper and facebook-core is always injected. -->
+      <ProguardConfiguration Include="$(_KapuschFacebookAppEventsProguardFile)" Condition="'$(_KapuschFacebookAppEventsEnabled)' == 'True'" />
     </ItemGroup>
+  </Target>
+
+  <!-- facebook-core reads the Play install referrer (used for install attribution) only when the
+       com.android.installreferrer classes are present. The package does not bundle them so the app
+       keeps a single copy shared with other SDKs; warn when AppEvents is selected without it. -->
+  <Target
+    Name="KapuschFacebookInterop_CheckInstallReferrer"
+    AfterTargets="ResolveAssemblyReferences"
+    Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(DisableKapuschFacebookAndroidNativeAssets)' != 'true' and '$(_KapuschFacebookAppEventsEnabled)' == 'True' and '$(KapuschFacebookAndroidSuppressInstallReferrerWarning)' != 'true'"
+  >
+    <ItemGroup>
+      <_KapuschFacebookInstallReferrerReference Include="@(ReferencePath)" Condition="'%(Filename)' == 'Xamarin.Google.Android.InstallReferrer'" />
+      <_KapuschFacebookInstallReferrerReference Include="@(AndroidAarLibrary);@(AndroidLibrary);@(AndroidJavaLibrary)" Condition="$([System.String]::Copy('%(Filename)').StartsWith('installreferrer'))" />
+    </ItemGroup>
+    <Warning
+      Code="KFBA001"
+      Condition="'@(_KapuschFacebookInstallReferrerReference)' == ''"
+      Text="Kapusch.Facebook.Android: the AppEvents feature is selected but no Play Install Referrer library was found, so Meta cannot read the install referrer. Add a PackageReference to Xamarin.Google.Android.InstallReferrer, or set KapuschFacebookAndroidSuppressInstallReferrerWarning=true. See Docs/Integration.md."
+    />
   </Target>
 </Project>

@@ -10,4 +10,8 @@ This repository and its NuGet package (`Kapusch.Facebook.Android`) redistribute 
 The NuGet package includes pinned Facebook SDK `.aar` files under `android/deps/`.
 The exact pinned artifacts (URLs + SHA256) are tracked in `DependencyLocks/Android/lockstate.txt`.
 
+The Facebook SDK declares `com.android.installreferrer:installreferrer`, AndroidX and Kotlin
+runtime dependencies. This package does not redistribute them; consuming apps obtain them
+from their own dependency graph.
+
 If you are redistributing this package further, ensure you comply with the upstream license terms.

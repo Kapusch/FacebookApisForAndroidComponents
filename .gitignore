@@ -34,3 +34,6 @@ samples/**/secrets.*
 # Sample generated files
 samples/**/AndroidManifest.xml
 samples/**/strings.xml
+
+# Python
+__pycache__/

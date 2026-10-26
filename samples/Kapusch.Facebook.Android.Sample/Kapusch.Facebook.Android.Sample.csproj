@@ -1,4 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Source mode reproduces NuGet's import order: package .props, project body, package .targets. -->
+  <Import
+    Project="$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.props"
+    Condition="Exists('$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.props')"
+  />
   <PropertyGroup>
     <TargetFramework>net10.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
@@ -8,6 +13,17 @@
     <ApplicationId>com.kapusch.facebookandroid.sample</ApplicationId>
     <ApplicationTitle>Kapusch Facebook Android Sample</ApplicationTitle>
     <UseKapuschFacebookAndroidInteropFromSource>true</UseKapuschFacebookAndroidInteropFromSource>
+    <KapuschFacebookFeatures>Login;Share;AppEvents</KapuschFacebookFeatures>
+  </PropertyGroup>
+  <!-- Release builds shrink with R8 so CI proves the keep rules hold for the JNI-only facade. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <AndroidLinkTool>r8</AndroidLinkTool>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AndroidCreateProguardMappingFile>true</AndroidCreateProguardMappingFile>
+  </PropertyGroup>
+  <!-- CI narrows the sample's ABIs without passing RuntimeIdentifiers globally to the library. -->
+  <PropertyGroup Condition="'$(SampleRuntimeIdentifiers)' != ''">
+    <RuntimeIdentifiers>$(SampleRuntimeIdentifiers)</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
     <_SampleManifest>$(MSBuildThisFileDirectory)Properties/AndroidManifest.xml</_SampleManifest>
@@ -34,6 +50,10 @@
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.7.1.1" />
     <PackageReference Include="Xamarin.AndroidX.CardView" Version="1.0.0.36" />
+    <!-- facebook-core uses LocalBroadcastManager at runtime; a bare AppCompat app does not bring it. -->
+    <PackageReference Include="Xamarin.AndroidX.LocalBroadcastManager" Version="1.1.0.25" />
+    <!-- Lets facebook-core read the Play install referrer (AppEvents feature, see Docs/Integration.md). -->
+    <PackageReference Include="Xamarin.Google.Android.InstallReferrer" Version="2.2.0.9" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)../../src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj" />

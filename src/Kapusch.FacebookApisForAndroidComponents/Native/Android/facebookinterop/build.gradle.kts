@@ -24,6 +24,8 @@ android {
 }
 
 dependencies {
-	implementation("com.facebook.android:facebook-login:18.1.3")
-	implementation("com.facebook.android:facebook-share:18.1.3")
+	// Keep every Facebook module on the same version as DependencyLocks/Android/lockstate.txt.
+	implementation("com.facebook.android:facebook-core:19.0.0")
+	implementation("com.facebook.android:facebook-login:19.0.0")
+	implementation("com.facebook.android:facebook-share:19.0.0")
 }

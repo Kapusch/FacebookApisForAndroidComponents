@@ -50,3 +50,10 @@ jobs:
       - name: Build Android sample
         run: |
           dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Debug
+
+      - name: Build Android sample with R8
+        run: |
+          dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj -c Release
+          python3 scripts/verify-interop.py apk \
+            samples/Kapusch.Facebook.Android.Sample/bin/Release/net10.0-android/com.kapusch.facebookandroid.sample-Signed.apk \
+            --feature Login --feature Share
