@@ -145,6 +145,7 @@ an empty array opts out explicitly.
        // FacebookAppEvents.SetAutoLogAppEventsEnabled(true);
        // ... or keep automatic logging off and log activation yourself. ActivateApp()
        // still sends the one-time install ping and starts activate/deactivate tracking.
+       // Call it after auto-init is enabled, or the SDK discards the ping response.
        FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
        FacebookAppEvents.ActivateApp();
    }

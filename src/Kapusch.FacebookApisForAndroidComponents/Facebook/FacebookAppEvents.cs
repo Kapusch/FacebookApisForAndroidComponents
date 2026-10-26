@@ -148,7 +148,9 @@ public static class FacebookAppEvents
 	/// <summary>
 	/// Logs app activation and the one-time install ping, then starts automatic activate/deactivate
 	/// tracking (<c>AppEventsLogger.activateApp</c>). Call it when automatic logging is disabled and
-	/// the consumer still wants install and launch measurement.
+	/// the consumer still wants install and launch measurement. Call it once the SDK is fully
+	/// initialized (<see cref="SetAutoInitEnabled"/> or <see cref="InitializeSdk"/>); before that the
+	/// SDK discards the install ping response and only retries on a later activation.
 	/// </summary>
 	public static void ActivateApp(Context? context = null) =>
 		CallVoid("activateApp", "(Landroid/content/Context;)V", new JValue(ResolveContext(context)));
