@@ -18,10 +18,12 @@ namespace Kapusch.Facebook.Android;
 /// meta-data on later launches. Apply the consumer's consent state explicitly on every launch.
 /// </para>
 /// <para>
-/// Calls that need an initialized SDK throw <see cref="Java.Lang.IllegalStateException"/> when the
-/// SDK was not initialized (the default <c>FacebookInitProvider</c> initializes it at process start).
-/// Invalid arguments rejected by the Java layer surface as <see cref="Java.Lang.Throwable"/>
-/// subclasses.
+/// Every setter, the identity methods and the event methods throw
+/// <see cref="Java.Lang.IllegalStateException"/> until <c>FacebookSdk.sdkInitialize</c> ran (the
+/// default <c>FacebookInitProvider</c> runs it at process start). Before that the SDK would drop
+/// them silently. When the provider is removed, call <see cref="InitializeSdk"/> first and pass the
+/// data processing options to it. Invalid arguments rejected by the Java layer surface as
+/// <see cref="Java.Lang.Throwable"/> subclasses.
 /// </para>
 /// </remarks>
 public static class FacebookAppEvents
@@ -67,12 +69,49 @@ public static class FacebookAppEvents
 
 	/// <summary>
 	/// Initializes the SDK when the <c>FacebookInitProvider</c> did not (for example when the consumer
-	/// removed the provider to defer the SDK until consent), then marks it fully initialized for this
+	/// removed the provider to defer the SDK until consent), applies
+	/// <paramref name="dataProcessingOptions"/>, then marks the SDK fully initialized for this
 	/// process. Unlike <see cref="SetAutoInitEnabled"/>, nothing is persisted.
 	/// </summary>
+	/// <remarks>
+	/// Pass Limited Data Use here rather than through <see cref="SetDataProcessingOptions"/> when the
+	/// provider is removed: the setter needs an initialized SDK, and full initialization starts the
+	/// SDK's first Graph requests, so this is the only point where the options apply to them.
+	/// </remarks>
 	/// <param name="context">Any context; the application context is used. Defaults to the application context.</param>
-	public static void InitializeSdk(Context? context = null) =>
-		CallVoid("initializeSdk", "(Landroid/content/Context;)V", new JValue(ResolveContext(context)));
+	/// <param name="dataProcessingOptions">
+	/// Options such as <see cref="FacebookDataProcessingOptions.LimitedDataUse"/>.
+	/// <see langword="null"/> leaves the current options unchanged; an empty array clears them.
+	/// </param>
+	/// <param name="dataProcessingCountry">Country for the options; <c>0</c> lets Meta geolocate the user.</param>
+	/// <param name="dataProcessingState">State for the options; <c>0</c> lets Meta geolocate the user.</param>
+	public static void InitializeSdk(
+		Context? context = null,
+		string[]? dataProcessingOptions = null,
+		int dataProcessingCountry = 0,
+		int dataProcessingState = 0
+	)
+	{
+		var array = dataProcessingOptions is null ? IntPtr.Zero : JNIEnv.NewArray(dataProcessingOptions);
+		try
+		{
+			CallVoid(
+				"initializeSdk",
+				"(Landroid/content/Context;[Ljava/lang/String;II)V",
+				new JValue(ResolveContext(context)),
+				new JValue(array),
+				new JValue(dataProcessingCountry),
+				new JValue(dataProcessingState)
+			);
+		}
+		finally
+		{
+			if (array != IntPtr.Zero)
+			{
+				JNIEnv.DeleteLocalRef(array);
+			}
+		}
+	}
 
 	/// <summary>
 	/// Sets the persisted auto-init flag. <see langword="true"/> also fully initializes the SDK
@@ -106,6 +145,8 @@ public static class FacebookAppEvents
 	/// <summary>
 	/// Sets data processing options, for example <see cref="FacebookDataProcessingOptions.LimitedDataUse"/>.
 	/// An empty array explicitly opts out. Country and state <c>0</c> let Meta geolocate the user.
+	/// Requires an initialized SDK; with the <c>FacebookInitProvider</c> removed, pass the options to
+	/// <see cref="InitializeSdk"/> instead.
 	/// </summary>
 	public static void SetDataProcessingOptions(string[] options, int country = 0, int state = 0)
 	{

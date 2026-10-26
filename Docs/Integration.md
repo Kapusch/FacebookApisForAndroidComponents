@@ -119,7 +119,8 @@ value, and a persisted value wins over the manifest on later launches.
 
 `SetDataProcessingOptions(new[] { FacebookDataProcessingOptions.LimitedDataUse })`
 enables Limited Data Use (country and state `0` let Meta geolocate the user);
-an empty array opts out explicitly.
+an empty array opts out explicitly. Like every setter, it needs an initialized
+SDK (see the strictest setup below).
 
 ### Consent-gating recipe
 
@@ -177,12 +178,19 @@ initialize after consent:
 ```
 
 ```csharp
-FacebookAppEvents.InitializeSdk(); // before any App Events, Login or Share call
+// After consent, before any App Events, Login or Share call.
+FacebookAppEvents.InitializeSdk(
+    dataProcessingOptions: limitedDataUse ? new[] { FacebookDataProcessingOptions.LimitedDataUse } : null
+);
 ```
 
 Without the provider, every SDK feature (including Login and Share) needs
-`InitializeSdk()` first. Calls that need an initialized SDK throw
-`Java.Lang.IllegalStateException` otherwise.
+`InitializeSdk()` first. Every `FacebookAppEvents` setter, identity call and
+event call throws `Java.Lang.IllegalStateException` before it; the SDK itself
+would drop them silently. Apply data processing options through
+`InitializeSdk`, which sets them after `sdkInitialize` and before the SDK's
+first Graph requests, and the other switches after it (their manifest values
+apply until then).
 
 ### Logging events
 

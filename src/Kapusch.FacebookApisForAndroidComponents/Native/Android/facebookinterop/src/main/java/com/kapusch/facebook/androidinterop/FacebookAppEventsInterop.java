@@ -23,13 +23,23 @@ public final class FacebookAppEventsInterop {
 
 	/**
 	 * Initializes the SDK if the FacebookInitProvider did not (for example when the consumer removed
-	 * it from the merged manifest), then marks it fully initialized for this process.
+	 * it from the merged manifest), applies the data processing options, then marks the SDK fully
+	 * initialized for this process.
+	 *
+	 * <p>The options are applied between the two steps because FacebookSdk.setDataProcessingOptions
+	 * needs the application context that sdkInitialize stores, and fullyInitialize starts the SDK's
+	 * first Graph requests, which must already carry Limited Data Use.
+	 *
+	 * @param dataProcessingOptions null leaves the options unchanged; an empty array clears them
 	 */
 	@SuppressWarnings("deprecation")
-	public static void initializeSdk(Context context) {
+	public static void initializeSdk(Context context, String[] dataProcessingOptions, int country, int state) {
 		Context applicationContext = requireContext(context).getApplicationContext();
 		if (!FacebookSdk.isInitialized()) {
 			FacebookSdk.sdkInitialize(applicationContext);
+		}
+		if (dataProcessingOptions != null) {
+			FacebookSdk.setDataProcessingOptions(dataProcessingOptions, country, state);
 		}
 		FacebookSdk.fullyInitialize();
 	}
@@ -43,6 +53,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setAutoInitEnabled(boolean enabled) {
+		requireInitialized("setAutoInitEnabled");
 		FacebookSdk.setAutoInitEnabled(enabled);
 	}
 
@@ -51,11 +62,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setAutoLogAppEventsEnabled(boolean enabled) {
-		// Enabling starts activity tracking, which needs the application context the SDK only
-		// knows once initialized. Fail with an actionable message instead of an SDK internal one.
-		if (enabled) {
-			requireInitialized("setAutoLogAppEventsEnabled(true)");
-		}
+		requireInitialized("setAutoLogAppEventsEnabled");
 		FacebookSdk.setAutoLogAppEventsEnabled(enabled);
 	}
 
@@ -64,6 +71,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setAdvertiserIdCollectionEnabled(boolean enabled) {
+		requireInitialized("setAdvertiserIdCollectionEnabled");
 		FacebookSdk.setAdvertiserIDCollectionEnabled(enabled);
 	}
 
@@ -72,6 +80,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setAutoLogMetaDataEnabled(boolean enabled) {
+		requireInitialized("setAutoLogMetaDataEnabled");
 		FacebookSdk.setAutoLogMetaDataEnabled(enabled);
 	}
 
@@ -80,6 +89,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setAutoLogProductImprovementEnabled(boolean enabled) {
+		requireInitialized("setAutoLogProductImprovementEnabled");
 		FacebookSdk.setAutoLogProductImprovementEnabled(enabled);
 	}
 
@@ -88,6 +98,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setDataProcessingOptions(String[] options, int country, int state) {
+		requireInitialized("setDataProcessingOptions");
 		FacebookSdk.setDataProcessingOptions(options != null ? options : new String[0], country, state);
 	}
 
@@ -155,14 +166,17 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void setUserId(String userId) {
+		requireInitialized("setUserId");
 		AppEventsLogger.setUserID(userId);
 	}
 
 	public static String getUserId() {
+		requireInitialized("getUserId");
 		return AppEventsLogger.getUserID();
 	}
 
 	public static void clearUserId() {
+		requireInitialized("clearUserId");
 		AppEventsLogger.clearUserID();
 	}
 
@@ -180,6 +194,7 @@ public final class FacebookAppEventsInterop {
 		String country,
 		String externalId
 	) {
+		requireInitialized("setUserData");
 		AppEventsLogger.setUserData(
 			email,
 			firstName,
@@ -196,6 +211,7 @@ public final class FacebookAppEventsInterop {
 	}
 
 	public static void clearUserData() {
+		requireInitialized("clearUserData");
 		AppEventsLogger.clearUserData();
 	}
 
@@ -210,12 +226,18 @@ public final class FacebookAppEventsInterop {
 		return AppEventsLogger.newLogger(FacebookSdk.getApplicationContext());
 	}
 
+	/**
+	 * Before sdkInitialize, most of these SDK calls fail inside CrashShield, which swallows the
+	 * error, or on an SDK background thread, and settings are kept in memory only, where the
+	 * persisted value can replace them at initialization. Fail loudly instead so a consent setting
+	 * is never silently dropped.
+	 */
 	private static void requireInitialized(String operation) {
 		if (!FacebookSdk.isInitialized()) {
 			throw new IllegalStateException(
 				operation
 					+ " requires an initialized Facebook SDK. Keep FacebookInitProvider in the merged"
-					+ " manifest or call initializeSdk first."
+					+ " manifest or call FacebookAppEvents.InitializeSdk first."
 			);
 		}
 	}
