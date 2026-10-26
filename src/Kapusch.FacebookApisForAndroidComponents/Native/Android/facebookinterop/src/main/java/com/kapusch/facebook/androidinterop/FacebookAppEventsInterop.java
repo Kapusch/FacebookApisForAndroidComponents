@@ -180,7 +180,12 @@ public final class FacebookAppEventsInterop {
 		AppEventsLogger.clearUserID();
 	}
 
-	/** Every value is hashed by the SDK before it is persisted or sent. */
+	/**
+	 * Replaces the stored user data: every value is hashed by the SDK before it is persisted or
+	 * sent, and a null value clears its field. AppEventsLogger.setUserData alone merges, keeping the
+	 * stored value of null fields, so clear first. Both calls run in order on the SDK's
+	 * single-threaded App Events executor.
+	 */
 	public static void setUserData(
 		String email,
 		String firstName,
@@ -195,6 +200,7 @@ public final class FacebookAppEventsInterop {
 		String externalId
 	) {
 		requireInitialized("setUserData");
+		AppEventsLogger.clearUserData();
 		AppEventsLogger.setUserData(
 			email,
 			firstName,

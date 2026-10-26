@@ -4,7 +4,7 @@ This package embeds a small Android interop AAR and the required Facebook Androi
 
 Set `KapuschFacebookFeatures` to any combination of `Login` (default), `Share` and `AppEvents`, for example `Login;AppEvents`.
 
-`AppEvents` exposes `FacebookAppEvents` (SDK initialization, consent switches, `ActivateApp`, `LogEvent`, `LogPurchase`, `LogStartTrial`, `LogSubscribe`, `LogCompleteRegistration`, anonymous ID, user ID and hashed user data) plus `FacebookAppEventNames` and `FacebookAppEventParameterNames` constants.
+`AppEvents` exposes `FacebookAppEvents` (SDK initialization, consent switches, `ActivateApp`, `LogEvent`, `LogPurchase`, `LogStartTrial`, `LogSubscribe`, `LogCompleteRegistration`, anonymous ID, user ID and hashed user data) plus `FacebookAppEventNames` and `FacebookAppEventParameterNames` constants. The App Events names match the `Kapusch.Facebook.iOS` package, so shared code compiles on both platforms.
 
 ## Notes
 - No secrets are included.

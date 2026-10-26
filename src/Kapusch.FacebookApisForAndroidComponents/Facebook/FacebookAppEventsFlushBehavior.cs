@@ -1,7 +1,7 @@
 namespace Kapusch.Facebook.Android;
 
 /// <summary>Mirrors <c>AppEventsLogger.FlushBehavior</c>.</summary>
-public enum FacebookFlushBehavior
+public enum FacebookAppEventsFlushBehavior
 {
 	/// <summary>The SDK flushes periodically and when enough events are queued (default).</summary>
 	Auto = 0,

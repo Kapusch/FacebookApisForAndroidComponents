@@ -109,7 +109,7 @@ public sealed class MainActivity : Activity
 			$"SDK initialized: {FacebookAppEvents.IsSdkInitialized}, fully: {FacebookAppEvents.IsSdkFullyInitialized}\n"
 			+ $"Auto-init: {FacebookAppEvents.IsAutoInitEnabled}, auto-log: {FacebookAppEvents.IsAutoLogAppEventsEnabled}, "
 			+ $"advertiser ID: {FacebookAppEvents.IsAdvertiserIdCollectionEnabled}\n"
-			+ $"Metadata: {FacebookAppEvents.IsAutoLogMetaDataEnabled}, product improvement: {FacebookAppEvents.IsAutoLogProductImprovementEnabled}\n"
+			+ $"Metadata: {FacebookAppEvents.IsMetadataCollectionEnabled}, product improvement: {FacebookAppEvents.IsAutoLogProductImprovementEnabled}\n"
 			+ $"Anonymous ID: {FacebookAppEvents.GetAnonymousId()}";
 	}
 

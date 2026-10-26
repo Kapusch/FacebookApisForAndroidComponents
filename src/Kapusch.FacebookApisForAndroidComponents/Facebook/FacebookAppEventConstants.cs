@@ -193,49 +193,49 @@ public static class FacebookAppEventParameterNames
 	public const string ProductCategory = "fb_product_category";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IOS_URL</c>.</summary>
-	public const string ProductApplinkIosUrl = "fb_product_applink_ios_url";
+	public const string ProductAppLinkIosUrl = "fb_product_applink_ios_url";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IOS_APP_STORE_ID</c>.</summary>
-	public const string ProductApplinkIosAppStoreId = "fb_product_applink_ios_app_store_id";
+	public const string ProductAppLinkIosAppStoreId = "fb_product_applink_ios_app_store_id";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IOS_APP_NAME</c>.</summary>
-	public const string ProductApplinkIosAppName = "fb_product_applink_ios_app_name";
+	public const string ProductAppLinkIosAppName = "fb_product_applink_ios_app_name";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPHONE_URL</c>.</summary>
-	public const string ProductApplinkIphoneUrl = "fb_product_applink_iphone_url";
+	public const string ProductAppLinkIPhoneUrl = "fb_product_applink_iphone_url";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPHONE_APP_STORE_ID</c>.</summary>
-	public const string ProductApplinkIphoneAppStoreId = "fb_product_applink_iphone_app_store_id";
+	public const string ProductAppLinkIPhoneAppStoreId = "fb_product_applink_iphone_app_store_id";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPHONE_APP_NAME</c>.</summary>
-	public const string ProductApplinkIphoneAppName = "fb_product_applink_iphone_app_name";
+	public const string ProductAppLinkIPhoneAppName = "fb_product_applink_iphone_app_name";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPAD_URL</c>.</summary>
-	public const string ProductApplinkIpadUrl = "fb_product_applink_ipad_url";
+	public const string ProductAppLinkIPadUrl = "fb_product_applink_ipad_url";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPAD_APP_STORE_ID</c>.</summary>
-	public const string ProductApplinkIpadAppStoreId = "fb_product_applink_ipad_app_store_id";
+	public const string ProductAppLinkIPadAppStoreId = "fb_product_applink_ipad_app_store_id";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_IPAD_APP_NAME</c>.</summary>
-	public const string ProductApplinkIpadAppName = "fb_product_applink_ipad_app_name";
+	public const string ProductAppLinkIPadAppName = "fb_product_applink_ipad_app_name";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_ANDROID_URL</c>.</summary>
-	public const string ProductApplinkAndroidUrl = "fb_product_applink_android_url";
+	public const string ProductAppLinkAndroidUrl = "fb_product_applink_android_url";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_ANDROID_PACKAGE</c>.</summary>
-	public const string ProductApplinkAndroidPackage = "fb_product_applink_android_package";
+	public const string ProductAppLinkAndroidPackage = "fb_product_applink_android_package";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_ANDROID_APP_NAME</c>.</summary>
-	public const string ProductApplinkAndroidAppName = "fb_product_applink_android_app_name";
+	public const string ProductAppLinkAndroidAppName = "fb_product_applink_android_app_name";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_WINDOWS_PHONE_URL</c>.</summary>
-	public const string ProductApplinkWindowsPhoneUrl = "fb_product_applink_windows_phone_url";
+	public const string ProductAppLinkWindowsPhoneUrl = "fb_product_applink_windows_phone_url";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_WINDOWS_PHONE_APP_ID</c>.</summary>
-	public const string ProductApplinkWindowsPhoneAppId = "fb_product_applink_windows_phone_app_id";
+	public const string ProductAppLinkWindowsPhoneAppId = "fb_product_applink_windows_phone_app_id";
 
 	/// <summary><c>AppEventsConstants.EVENT_PARAM_PRODUCT_APPLINK_WINDOWS_PHONE_APP_NAME</c>.</summary>
-	public const string ProductApplinkWindowsPhoneAppName = "fb_product_applink_windows_phone_app_name";
+	public const string ProductAppLinkWindowsPhoneAppName = "fb_product_applink_windows_phone_app_name";
 }
 
 /// <summary>Canonical App Events parameter values, mirrored from <c>AppEventsConstants</c> of the bundled Facebook Android SDK (19.0.0).</summary>

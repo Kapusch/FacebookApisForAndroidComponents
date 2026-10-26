@@ -55,7 +55,7 @@ public static class FacebookAppEvents
 	public static bool IsAdvertiserIdCollectionEnabled => CallBool("isAdvertiserIdCollectionEnabled");
 
 	/// <summary>Gets the app metadata collection flag (<c>com.facebook.sdk.AutoLogMetaDataEnabled</c>, SDK 19+).</summary>
-	public static bool IsAutoLogMetaDataEnabled => CallBool("isAutoLogMetaDataEnabled");
+	public static bool IsMetadataCollectionEnabled => CallBool("isAutoLogMetaDataEnabled");
 
 	/// <summary>
 	/// Gets the product-improvement data flag (<c>com.facebook.sdk.AutoLogProductImprovementEnabled</c>, SDK 19+).
@@ -63,8 +63,8 @@ public static class FacebookAppEvents
 	public static bool IsAutoLogProductImprovementEnabled => CallBool("isAutoLogProductImprovementEnabled");
 
 	/// <summary>Gets the current App Events flush behavior.</summary>
-	public static FacebookFlushBehavior FlushBehavior =>
-		(FacebookFlushBehavior)
+	public static FacebookAppEventsFlushBehavior FlushBehavior =>
+		(FacebookAppEventsFlushBehavior)
 			JNIEnv.CallStaticIntMethod(InteropClass.Value, Method("getFlushBehavior", "()I"));
 
 	/// <summary>
@@ -132,10 +132,11 @@ public static class FacebookAppEvents
 		CallVoid("setAdvertiserIdCollectionEnabled", "(Z)V", new JValue(enabled));
 
 	/// <summary>
-	/// Sets the persisted app metadata collection flag (screen title and AppLink URL attached to
-	/// events, SDK 19+). <see langword="false"/> also discards metadata already collected.
+	/// Sets the persisted app metadata collection flag (<c>FacebookSdk.setAutoLogMetaDataEnabled</c>:
+	/// screen title and AppLink URL attached to events, SDK 19+). <see langword="false"/> also discards
+	/// metadata already collected. Named like the iOS package's equivalent.
 	/// </summary>
-	public static void SetAutoLogMetaDataEnabled(bool enabled) =>
+	public static void SetMetadataCollectionEnabled(bool enabled) =>
 		CallVoid("setAutoLogMetaDataEnabled", "(Z)V", new JValue(enabled));
 
 	/// <summary>Sets the persisted product-improvement data flag (SDK 19+).</summary>
@@ -176,7 +177,7 @@ public static class FacebookAppEvents
 		CallVoid("setDebugLoggingEnabled", "(Z)V", new JValue(enabled));
 
 	/// <summary>Sets when queued events are flushed to Meta.</summary>
-	public static void SetFlushBehavior(FacebookFlushBehavior behavior)
+	public static void SetFlushBehavior(FacebookAppEventsFlushBehavior behavior)
 	{
 		if (!Enum.IsDefined(behavior))
 		{
@@ -197,7 +198,7 @@ public static class FacebookAppEvents
 		CallVoid("activateApp", "(Landroid/content/Context;)V", new JValue(ResolveContext(context)));
 
 	/// <summary>Logs an event (<c>AppEventsLogger.logEvent</c>).</summary>
-	/// <param name="name">Event name, for example a <see cref="FacebookAppEventNames"/> constant.</param>
+	/// <param name="eventName">Event name, for example a <see cref="FacebookAppEventNames"/> constant.</param>
 	/// <param name="parameters">
 	/// Optional parameters. Values must be <see cref="string"/>, <see cref="bool"/> (sent as
 	/// <c>"1"</c>/<c>"0"</c>), an integral type, <see cref="float"/>, <see cref="double"/> or
@@ -205,19 +206,19 @@ public static class FacebookAppEvents
 	/// </param>
 	/// <param name="valueToSum">Optional value Meta sums for this event (for example a price).</param>
 	public static void LogEvent(
-		string name,
+		string eventName,
 		IReadOnlyDictionary<string, object>? parameters = null,
 		double? valueToSum = null
 	)
 	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(name);
+		ArgumentException.ThrowIfNullOrWhiteSpace(eventName);
 		if (valueToSum is { } value && !double.IsFinite(value))
 		{
 			throw new ArgumentOutOfRangeException(nameof(valueToSum), value, "valueToSum must be finite.");
 		}
 
 		using var bundle = ToBundle(parameters);
-		var eventName = JNIEnv.NewString(name);
+		var name = JNIEnv.NewString(eventName);
 		try
 		{
 			if (valueToSum is { } sum)
@@ -225,7 +226,7 @@ public static class FacebookAppEvents
 				CallVoid(
 					"logEventWithValue",
 					"(Ljava/lang/String;DLandroid/os/Bundle;)V",
-					new JValue(eventName),
+					new JValue(name),
 					new JValue(sum),
 					new JValue(bundle?.Handle ?? IntPtr.Zero)
 				);
@@ -235,21 +236,21 @@ public static class FacebookAppEvents
 				CallVoid(
 					"logEvent",
 					"(Ljava/lang/String;Landroid/os/Bundle;)V",
-					new JValue(eventName),
+					new JValue(name),
 					new JValue(bundle?.Handle ?? IntPtr.Zero)
 				);
 			}
 		}
 		finally
 		{
-			JNIEnv.DeleteLocalRef(eventName);
+			JNIEnv.DeleteLocalRef(name);
 		}
 	}
 
 	/// <summary>
 	/// Logs <see cref="FacebookAppEventNames.Purchased"/> with <c>fb_currency</c> and the amount as
 	/// value to sum (<c>AppEventsLogger.logPurchase</c>). The SDK flushes purchases immediately
-	/// unless the flush behavior is <see cref="FacebookFlushBehavior.ExplicitOnly"/>.
+	/// unless the flush behavior is <see cref="FacebookAppEventsFlushBehavior.ExplicitOnly"/>.
 	/// </summary>
 	/// <param name="amount">Purchase amount.</param>
 	/// <param name="currencyIsoCode">ISO 4217 currency code, for example <c>EUR</c>.</param>
@@ -311,9 +312,13 @@ public static class FacebookAppEvents
 
 	/// <summary>Logs <see cref="FacebookAppEventNames.CompletedRegistration"/>.</summary>
 	/// <param name="registrationMethod">Optional <c>fb_registration_method</c>, for example <c>email</c>.</param>
+	/// <param name="value">Optional value to sum. Requires <paramref name="currencyIsoCode"/>.</param>
+	/// <param name="currencyIsoCode">ISO 4217 currency code sent as <c>fb_currency</c>.</param>
 	/// <param name="parameters">Optional extra parameters. Explicit arguments win over the same keys here.</param>
 	public static void LogCompleteRegistration(
 		string? registrationMethod = null,
+		decimal? value = null,
+		string? currencyIsoCode = null,
 		IReadOnlyDictionary<string, object>? parameters = null
 	)
 	{
@@ -323,7 +328,7 @@ public static class FacebookAppEvents
 			merged[FacebookAppEventParameterNames.RegistrationMethod] = registrationMethod;
 		}
 
-		LogEvent(FacebookAppEventNames.CompletedRegistration, merged);
+		LogValuedEvent(FacebookAppEventNames.CompletedRegistration, value, currencyIsoCode, orderId: null, merged);
 	}
 
 	/// <summary>Sends queued events now (<c>AppEventsLogger.flush</c>). Not a delivery receipt.</summary>
@@ -331,11 +336,11 @@ public static class FacebookAppEvents
 
 	/// <summary>
 	/// Gets the SDK's persisted anonymous app/device ID (<c>AppEventsLogger.getAnonymousAppDeviceGUID</c>),
-	/// for example to forward to a server-side integration.
+	/// for example to forward to a server-side integration. <see langword="null"/> when the SDK
+	/// returns none.
 	/// </summary>
-	public static string GetAnonymousId(Context? context = null) =>
-		CallString("getAnonymousId", "(Landroid/content/Context;)Ljava/lang/String;", new JValue(ResolveContext(context)))
-		?? string.Empty;
+	public static string? GetAnonymousId(Context? context = null) =>
+		CallString("getAnonymousId", "(Landroid/content/Context;)Ljava/lang/String;", new JValue(ResolveContext(context)));
 
 	/// <summary>Gets the user ID attached to events, or <see langword="null"/>.</summary>
 	public static string? GetUserId() => CallString("getUserId", "()Ljava/lang/String;");
@@ -369,10 +374,10 @@ public static class FacebookAppEvents
 	/// <summary>
 	/// Sets advanced-matching user data (<c>AppEventsLogger.setUserData</c>). The SDK normalizes and
 	/// SHA-256 hashes every value (values that already look like SHA-256 hashes are kept as is) before
-	/// persisting or sending it. Fields left <see langword="null"/> keep their previously stored value;
-	/// call <see cref="ClearUserData"/> to remove everything.
+	/// persisting or sending it. Replaces every field at once: a <see langword="null"/> property
+	/// clears that field, as in the iOS package.
 	/// </summary>
-	public static void SetUserData(FacebookUserData userData)
+	public static void SetUserData(FacebookAppEventsUserData userData)
 	{
 		ArgumentNullException.ThrowIfNull(userData);
 		string?[] values =

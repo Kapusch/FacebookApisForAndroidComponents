@@ -114,7 +114,7 @@ value, and a persisted value wins over the manifest on later launches.
 | `AutoInitEnabled` | `SetAutoInitEnabled`, `IsAutoInitEnabled` | `false` keeps the SDK from fully initializing; the SDK does not process Graph API responses until then. |
 | `AutoLogAppEventsEnabled` | `SetAutoLogAppEventsEnabled`, `IsAutoLogAppEventsEnabled` | Automatic install ping, app activation and, when Events Manager allows it, Google Play purchase and subscription events. Since 19.0.0 a local `false` wins over Events Manager. |
 | `AdvertiserIDCollectionEnabled` | `SetAdvertiserIdCollectionEnabled`, `IsAdvertiserIdCollectionEnabled` | Advertising ID collection. |
-| `AutoLogMetaDataEnabled` | `SetAutoLogMetaDataEnabled`, `IsAutoLogMetaDataEnabled` | SDK 19.0.0+: attaches the screen title and AppLink URL to events. `false` also discards what was collected. |
+| `AutoLogMetaDataEnabled` | `SetMetadataCollectionEnabled`, `IsMetadataCollectionEnabled` | SDK 19.0.0+: attaches the screen title and AppLink URL to events. `false` also discards what was collected. |
 | `AutoLogProductImprovementEnabled` | `SetAutoLogProductImprovementEnabled`, `IsAutoLogProductImprovementEnabled` | SDK 19.0.0+: control for product-improvement data. The 19.0.0 changelog says the SDK does not collect such data yet. |
 
 `SetDataProcessingOptions(new[] { FacebookDataProcessingOptions.LimitedDataUse })`
@@ -199,6 +199,7 @@ FacebookAppEvents.LogStartTrial(value: 0m, currencyIsoCode: "EUR", orderId: subs
 FacebookAppEvents.LogSubscribe(value: 4.99m, currencyIsoCode: "EUR", orderId: subscriptionId);
 FacebookAppEvents.LogPurchase(4.99m, "EUR");
 FacebookAppEvents.LogCompleteRegistration(registrationMethod: "email");
+// value and currencyIsoCode are optional on every typed helper; a value needs a currency.
 FacebookAppEvents.LogEvent(
     FacebookAppEventNames.ViewedContent,
     new Dictionary<string, object> { [FacebookAppEventParameterNames.ContentId] = "item-1" }
@@ -213,7 +214,7 @@ FacebookAppEvents.LogEvent(
   types, finite `float`/`double`, or `decimal`.
 - `fb_order_id` is the ID shared by every event of one subscription.
 - `LogPurchase` flushes immediately unless the flush behavior is
-  `FacebookFlushBehavior.ExplicitOnly`. `Flush()` is not a delivery receipt.
+  `FacebookAppEventsFlushBehavior.ExplicitOnly`. `Flush()` is not a delivery receipt.
 
 ### Avoid double counting with server-side events
 
@@ -229,14 +230,14 @@ the SDK. When a server already sends trial, subscription or purchase events:
 
 ### Identity
 
-- `GetAnonymousId()` returns the SDK's persisted anonymous app/device ID, for
-  example to forward to a server-side integration.
+- `GetAnonymousId()` returns the SDK's persisted anonymous app/device ID (or
+  `null`), for example to forward to a server-side integration.
 - `SetUserId` / `ClearUserId` attach or remove a user ID on subsequent events.
-- `SetUserData(new FacebookUserData { Email = ..., ExternalId = ... })` enables
-  advanced matching; the SDK normalizes and SHA-256 hashes every value before
-  persisting or sending it. `null` properties keep their stored value, so use
-  `ClearUserData()` to remove everything. Collect such data only with a legal
-  basis.
+- `SetUserData(new FacebookAppEventsUserData { Email = ..., ExternalId = ... })`
+  enables advanced matching; the SDK normalizes and SHA-256 hashes every value
+  before persisting or sending it. Each call replaces all stored fields: a
+  `null` property clears that field. `ClearUserData()` removes everything.
+  Collect such data only with a legal basis.
 
 ### Diagnostics
 
@@ -252,6 +253,33 @@ only through JNI), facebook-core ships its own consumer rules, and the
 `AppEvents` feature adds `buildTransitive/proguard/kapusch-facebook-appevents.pro`,
 which keeps the Play Billing API that facebook-core calls by reflection for
 purchase auto-logging. CI builds the sample with R8 and checks the shrunk APK.
+
+### Shared surface with the iOS package
+
+`Kapusch.Facebook.iOS` exposes the same App Events names, so code shared by
+both platforms compiles against either package (only the namespace differs:
+`Kapusch.Facebook.Android` or `Kapusch.Facebook.iOS`):
+
+- `FacebookAppEvents.InitializeSdk()`, `ActivateApp()`, `LogEvent(eventName,
+  parameters, valueToSum)`, `LogPurchase`, `LogStartTrial`, `LogSubscribe`,
+  `LogCompleteRegistration(registrationMethod, value, currencyIsoCode,
+  parameters)`, `Flush()`, `SetFlushBehavior` / `FlushBehavior`;
+- `SetAutoLogAppEventsEnabled`, `SetAdvertiserIdCollectionEnabled`,
+  `SetMetadataCollectionEnabled`, `SetAutoLogProductImprovementEnabled`,
+  `SetDataProcessingOptions`, `SetDebugLoggingEnabled` and the matching `Is*`
+  properties;
+- `GetAnonymousId()`, `SetUserId`, `GetUserId`, `ClearUserId`, `SetUserData`
+  (a `null` field clears it on both), `ClearUserData`;
+- `FacebookAppEventNames`, `FacebookAppEventParameterNames`,
+  `FacebookAppEventParameterValues`, `FacebookAppEventsFlushBehavior`,
+  `FacebookAppEventsUserData`, `FacebookDataProcessingOptions`.
+
+Android-only members: the optional `Context` and data processing arguments of
+`InitializeSdk`, `ActivateApp` and `GetAnonymousId`, `SetAutoInitEnabled` /
+`IsAutoInitEnabled`, `IsSdkInitialized`, `IsSdkFullyInitialized` and
+`FacebookAppEventsUserData.ExternalId` (iOS sets the external ID through
+`SetUserDataValue`). Errors differ too: Android throws
+`Java.Lang.IllegalStateException` before SDK initialization.
 
 ### Not exposed on Android
 

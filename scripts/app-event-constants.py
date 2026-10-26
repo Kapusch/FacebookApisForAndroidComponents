@@ -35,8 +35,13 @@ NOTES = {
 }
 
 
+# Words whose casing follows the iOS package (and .NET naming) instead of plain title case, so
+# shared code can use the same constant names on both platforms.
+WORDS = {"APPLINK": "AppLink", "IPHONE": "IPhone", "IPAD": "IPad"}
+
+
 def pascal(name: str) -> str:
-    return "".join(part[:1].upper() + part[1:].lower() for part in name.split("_") if part)
+    return "".join(WORDS.get(part, part[:1].upper() + part[1:].lower()) for part in name.split("_") if part)
 
 
 def read_constants(deps: Path) -> tuple[str, list[tuple[str, str]]]:
