@@ -225,7 +225,9 @@ the SDK. When a server already sends trial, subscription or purchase events:
 - `SetUserId` / `ClearUserId` attach or remove a user ID on subsequent events.
 - `SetUserData(new FacebookUserData { Email = ..., ExternalId = ... })` enables
   advanced matching; the SDK normalizes and SHA-256 hashes every value before
-  persisting or sending it. Collect such data only with a legal basis.
+  persisting or sending it. `null` properties keep their stored value, so use
+  `ClearUserData()` to remove everything. Collect such data only with a legal
+  basis.
 
 ### Diagnostics
 

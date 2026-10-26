@@ -325,8 +325,9 @@ public static class FacebookAppEvents
 
 	/// <summary>
 	/// Sets advanced-matching user data (<c>AppEventsLogger.setUserData</c>). The SDK normalizes and
-	/// SHA-256 hashes every value before persisting or sending it. Fields left <see langword="null"/>
-	/// are cleared.
+	/// SHA-256 hashes every value (values that already look like SHA-256 hashes are kept as is) before
+	/// persisting or sending it. Fields left <see langword="null"/> keep their previously stored value;
+	/// call <see cref="ClearUserData"/> to remove everything.
 	/// </summary>
 	public static void SetUserData(FacebookUserData userData)
 	{

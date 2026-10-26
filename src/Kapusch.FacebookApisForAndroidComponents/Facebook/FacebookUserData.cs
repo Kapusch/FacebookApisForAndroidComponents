@@ -3,6 +3,7 @@ namespace Kapusch.Facebook.Android;
 /// <summary>
 /// Advanced-matching user data for <see cref="FacebookAppEvents.SetUserData"/>. Pass raw values:
 /// the Facebook SDK normalizes and SHA-256 hashes each one before persisting or sending it.
+/// <see langword="null"/> properties leave the stored value unchanged.
 /// </summary>
 /// <remarks>
 /// Advanced matching sends personal data (hashed) to Meta. Collect it only with a legal basis and
