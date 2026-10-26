@@ -24,6 +24,8 @@ Pack the NuGet:
 
 - `dotnet pack src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj -c Release -o artifacts/nuget`
 
+Run the validators listed in `README.md` before opening a PR; CI runs the same set.
+
 ## Formatting
 
 - C#: follow `.editorconfig` (tabs, LF).
@@ -37,6 +39,10 @@ Pack the NuGet:
 - If you update the Facebook SDK version, update both:
   - `src/Kapusch.FacebookApisForAndroidComponents/Native/Android/facebookinterop/build.gradle.kts`
   - `DependencyLocks/Android/lockstate.txt` (URLs + SHA256)
+
+  Then regenerate the App Events constants with
+  `python3 scripts/app-event-constants.py --write`, review the upstream changelog
+  for new manifest switches, and rebuild the sample with R8.
 
 See `Docs/Release.md` before changing versions, tags, or publishing workflows.
 

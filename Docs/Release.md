@@ -14,7 +14,7 @@ NuGet versions and Git tags are immutable. Query the official NuGet index before
 ## Release sequence
 
 1. Fetch `origin`, start a short-lived branch from `origin/master`, and verify the worktree is clean.
-2. Build the native wrapper, restore the locked AARs, pack the NuGet and inspect its selected modules.
+2. Build the native wrapper, restore the locked AARs, pack the NuGet and run the validators listed in `README.md` (package layout, JNI contract, constants, public tree, R8 sample).
 3. Open a PR to `master` and require CI to pass.
 4. Merge and fetch the resulting `origin/master` commit.
 5. Create the RC or stable tag on that exact commit and push only the new tag.

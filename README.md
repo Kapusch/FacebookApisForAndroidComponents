@@ -9,12 +9,26 @@ Public OSS repository that packages selected Facebook Android features into a co
 ## What this repo ships
 
 A NuGet package that:
-- provides managed entry points for Facebook Login and photo sharing, and
-- redistributes the required **Facebook Android SDK AARs** inside the `.nupkg` (classic/native packaging),
+- provides managed entry points for Facebook Login, photo sharing and App Events,
+- redistributes the required **Facebook Android SDK AARs** (19.0.0) inside the `.nupkg` (classic/native packaging),
 - injects the AARs into consuming apps via `buildTransitive` `AndroidAarLibrary` items.
 
-Select `KapuschFacebookFeatures=Login`, `Share`, or `Login;Share`. The default is
+Select any combination of `Login`, `Share` and `AppEvents` with
+`KapuschFacebookFeatures` (for example `Login;AppEvents`). The default is
 `Login`; only selected native AARs are injected into the consuming artifact.
+`AppEvents` needs no extra AAR (facebook-core is always injected) and adds an R8
+rule for purchase auto-logging.
+
+## Dependency ingestion paths
+
+- Facebook AARs: downloaded at repo build time from Maven Central by
+  `restore-facebook-aars.sh`, verified against `DependencyLocks/Android/lockstate.txt`.
+- The interop AAR compiles against the same Facebook version through Gradle.
+- The sample (repo-only) references `Xamarin.Google.Android.InstallReferrer`, which
+  downloads `installreferrer-2.2.aar` from Google Maven on its first build.
+- Not bundled: AndroidX, Kotlin, Play Install Referrer and Google Play services.
+  Consumers get them from their own graph (managed `Xamarin.*` NuGets); see
+  `Docs/Integration.md` for the App Events recommendations.
 
 ## Third-party licenses
 
@@ -43,6 +57,14 @@ Restore pinned Facebook AARs (repo-only):
 Pack the NuGet:
 - `dotnet pack src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj -c Release -o artifacts/nuget`
 
+Validate (all run in CI):
+- `python3 scripts/verify-public.py` (no real ids or emails; private terms come from the `KAPUSCH_PRIVATE_TERMS` variable or the untracked `.git/info/private-terms`)
+- `bash tests/validate-feature-selection.sh`
+- `python3 scripts/app-event-constants.py` (C# constants match the bundled SDK)
+- `python3 scripts/verify-interop.py jni` (C# JNI calls match the Java facade)
+- `python3 scripts/validate-package.py artifacts/nuget`
+- `python3 scripts/verify-interop.py apk <sample Release apk> --feature Login --feature Share` (facade survives R8)
+
 ## Consumption
 
 - Install the package from NuGet.org for public release tags.
@@ -51,7 +73,7 @@ Pack the NuGet:
 
 ## CI
 
-- PR CI is build-only.
+- PR CI builds, packs, runs the validators and builds the sample with R8.
 - Publishing is handled by `.github/workflows/publish.yml` with channel routing:
 	- tag `vX.Y.Z` on `master` -> NuGet.org (stable)
 	- tag `vX.Y.Z-rc.N` on `master` -> NuGet.org (pre-release)
