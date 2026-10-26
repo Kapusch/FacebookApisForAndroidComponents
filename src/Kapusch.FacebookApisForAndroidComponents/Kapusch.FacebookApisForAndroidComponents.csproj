@@ -6,7 +6,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);Native/**</DefaultItemExcludes>
     <PackageId>Kapusch.Facebook.Android</PackageId>
     <Authors>Kapusch</Authors>
-    <Description>Facebook Android auth interop wrapper + classic AAR packaging.</Description>
+    <Description>Facebook Android SDK interop for Login, photo Share and App Events, with classic AAR packaging.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Kapusch/FacebookApisForAndroidComponents</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

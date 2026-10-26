@@ -3,5 +3,6 @@
 	<KapuschFacebookFeatures Condition="'$(KapuschFacebookFeatures)' == ''">Login</KapuschFacebookFeatures>
     <DisableKapuschFacebookAndroidNativeAssets Condition="'$(DisableKapuschFacebookAndroidNativeAssets)' == ''">false</DisableKapuschFacebookAndroidNativeAssets>
     <UseKapuschFacebookAndroidInteropFromSource Condition="'$(UseKapuschFacebookAndroidInteropFromSource)' == ''">false</UseKapuschFacebookAndroidInteropFromSource>
+    <KapuschFacebookAndroidSuppressInstallReferrerWarning Condition="'$(KapuschFacebookAndroidSuppressInstallReferrerWarning)' == ''">false</KapuschFacebookAndroidSuppressInstallReferrerWarning>
   </PropertyGroup>
 </Project>
