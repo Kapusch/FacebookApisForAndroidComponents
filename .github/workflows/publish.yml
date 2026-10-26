@@ -81,7 +81,11 @@ jobs:
           java-version: "21"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          # Pinned like the consuming app: the default 'tools' package no longer exists.
+          cmdline-tools-version: '12266719'
+          packages: 'platform-tools'
 
       - name: Install Android workload
         run: |
