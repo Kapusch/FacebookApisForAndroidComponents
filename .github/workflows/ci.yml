@@ -18,6 +18,12 @@ jobs:
         with:
           dotnet-version: "10.0.203"
 
+      - name: Scan public tree
+        env:
+          # Optional; the scan skips private terms when the secret is not set.
+          KAPUSCH_PRIVATE_TERMS: ${{ secrets.KAPUSCH_PRIVATE_TERMS }}
+        run: python3 scripts/verify-public.py
+
       - name: Validate feature selection
         run: bash tests/validate-feature-selection.sh
 
@@ -51,11 +57,29 @@ jobs:
         run: |
           bash src/Kapusch.FacebookApisForAndroidComponents/Native/Android/restore-facebook-aars.sh
 
+      - name: Verify App Events constants and JNI contract
+        run: |
+          python3 scripts/app-event-constants.py
+          python3 scripts/verify-interop.py jni
+
       - name: Pack
         run: |
           dotnet pack src/Kapusch.FacebookApisForAndroidComponents/Kapusch.FacebookApisForAndroidComponents.csproj \
             -c Release \
             -o artifacts/nuget
+
+      - name: Validate package
+        run: python3 scripts/validate-package.py artifacts/nuget
+
+      - name: Build sample with R8 and verify the shrunk APK
+        run: |
+          dotnet build samples/Kapusch.Facebook.Android.Sample/Kapusch.Facebook.Android.Sample.csproj \
+            -c Release \
+            -p:RuntimeIdentifiers=android-arm64
+          python3 scripts/verify-interop.py apk \
+            samples/Kapusch.Facebook.Android.Sample/bin/Release/net10.0-android/com.kapusch.facebookandroid.sample-Signed.apk \
+            --feature Login --feature Share
+
       - uses: actions/upload-artifact@v4
         with:
           name: nuget

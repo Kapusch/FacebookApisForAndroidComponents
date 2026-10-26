@@ -1,0 +1,23 @@
+<Project>
+  <!-- Exercises KapuschFacebookInterop_CheckInstallReferrer without a full Android build. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.props" />
+
+  <PropertyGroup Condition="'$(RequestedFacebookFeatures)' != ''">
+    <KapuschFacebookFeatures>$(RequestedFacebookFeatures)</KapuschFacebookFeatures>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ReferenceInstallReferrer)' == 'managed'">
+    <ReferencePath Include="$(MSBuildThisFileDirectory)fake/Xamarin.Google.Android.InstallReferrer.dll" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ReferenceInstallReferrer)' == 'aar'">
+    <AndroidAarLibrary Include="$(MSBuildThisFileDirectory)fake/installreferrer-2.2.aar" />
+  </ItemGroup>
+
+  <Import Project="../src/Kapusch.FacebookApisForAndroidComponents/buildTransitive/Kapusch.Facebook.Android.targets" />
+
+  <Target Name="CheckInstallReferrer" DependsOnTargets="KapuschFacebookInterop_CheckInstallReferrer" />
+</Project>
