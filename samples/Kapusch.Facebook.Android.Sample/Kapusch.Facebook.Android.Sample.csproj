@@ -50,6 +50,8 @@
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.7.1.1" />
     <PackageReference Include="Xamarin.AndroidX.CardView" Version="1.0.0.36" />
+    <!-- facebook-core uses LocalBroadcastManager at runtime; a bare AppCompat app does not bring it. -->
+    <PackageReference Include="Xamarin.AndroidX.LocalBroadcastManager" Version="1.1.0.25" />
     <!-- Lets facebook-core read the Play install referrer (AppEvents feature, see Docs/Integration.md). -->
     <PackageReference Include="Xamarin.Google.Android.InstallReferrer" Version="2.2.0.9" />
   </ItemGroup>

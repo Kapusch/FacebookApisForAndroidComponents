@@ -20,6 +20,19 @@ same for every selection.
 </PropertyGroup>
 ```
 
+## Runtime dependencies the app provides
+
+The package redistributes only the Facebook AARs. Their POMs also declare
+AndroidX and Kotlin runtime dependencies (annotation, core-ktx,
+legacy-support-core-utils including `LocalBroadcastManager`, appcompat,
+cardview, browser, activity, fragment, kotlin-stdlib), which the app must
+provide through managed `Xamarin.AndroidX.*` / `Xamarin.Kotlin.StdLib`
+packages. .NET MAUI apps usually have most of them already; a bare
+`net-android` app needs at least `Xamarin.AndroidX.AppCompat`,
+`Xamarin.AndroidX.CardView` and `Xamarin.AndroidX.LocalBroadcastManager`
+(facebook-core crashes at startup with `NoClassDefFoundError` without the
+latter). See `samples/Kapusch.Facebook.Android.Sample`.
+
 ## Required AndroidManifest entries
 
 You must include the required Meta/Facebook Android SDK entries in your app manifest (example only; use resources, do not hardcode secrets):
@@ -151,8 +164,11 @@ an empty array opts out explicitly.
    already sent; that goes through Meta's data deletion process.
 
 The `FacebookInitProvider` merged from facebook-core still calls
-`FacebookSdk.sdkInitialize` at process start, with `AutoInitEnabled=false`.
-For the strictest setup, remove it and initialize after consent:
+`FacebookSdk.sdkInitialize` at process start, with `AutoInitEnabled=false`. The
+SDK then still prepares its startup Graph requests and rejects them before
+processing a response (logcat: `GraphRequest can't be used when Facebook SDK
+isn't fully initialized`). For the strictest setup, remove the provider and
+initialize after consent:
 
 ```xml
 <!-- Requires xmlns:tools="http://schemas.android.com/tools" on <manifest>. -->
