@@ -49,3 +49,19 @@ calls `ActivateApp()` with automatic logging still off; "Withdraw ads consent"
 reverts them. Debug builds enable `SetDebugLoggingEnabled(true)`, so logged and
 flushed events appear in `adb logcat`. Use Meta Events Manager > Test events to
 confirm delivery.
+
+### Access token attribution check
+
+The facade creates a new `AppEventsLogger` for every call, because a logger tags
+every event with the Facebook access token that was current when the logger was
+created. To check that events follow the current login state, use a real Meta
+app ID and:
+
+1. log a custom event and flush;
+2. sign in with Facebook Login, log another event and flush;
+3. sign out, log a third event and flush.
+
+Inspect the `access_token` field of each `POST /<app id>/activities` request
+(an HTTPS proxy or the Android Studio Network Inspector; the SDK redacts tokens
+in logcat). Only the request flushed in step 2 may carry the signed-in user's
+token; steps 1 and 3 use the app's client token.

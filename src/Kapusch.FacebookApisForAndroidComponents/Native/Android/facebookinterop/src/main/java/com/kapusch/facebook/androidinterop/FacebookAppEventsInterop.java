@@ -19,9 +19,6 @@ import java.util.Currency;
  * caller sets it explicitly.
  */
 public final class FacebookAppEventsInterop {
-	private static final Object LOGGER_LOCK = new Object();
-	private static volatile AppEventsLogger logger;
-
 	private FacebookAppEventsInterop() {}
 
 	/**
@@ -202,18 +199,15 @@ public final class FacebookAppEventsInterop {
 		AppEventsLogger.clearUserData();
 	}
 
+	/**
+	 * Returns a new logger for every call. An AppEventsLogger captures the current Facebook access
+	 * token when it is created and tags every event it logs with it, so a cached logger would keep
+	 * attributing events to a user who has since logged out (or never pick up a later login).
+	 * Creating one is cheap: the event queue and the flush state are static in the SDK.
+	 */
 	private static AppEventsLogger getLogger() {
-		AppEventsLogger current = logger;
-		if (current != null) {
-			return current;
-		}
 		requireInitialized("App Events logging");
-		synchronized (LOGGER_LOCK) {
-			if (logger == null) {
-				logger = AppEventsLogger.newLogger(FacebookSdk.getApplicationContext());
-			}
-			return logger;
-		}
+		return AppEventsLogger.newLogger(FacebookSdk.getApplicationContext());
 	}
 
 	private static void requireInitialized(String operation) {
