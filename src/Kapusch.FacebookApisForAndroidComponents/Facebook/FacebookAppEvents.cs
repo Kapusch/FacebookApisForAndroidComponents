@@ -19,10 +19,11 @@ namespace Kapusch.Facebook.Android;
 /// </para>
 /// <para>
 /// Turning switches off does not stop the SDK for the current process: it stays fully initialized,
-/// keeps flushing queued events and, once <see cref="ActivateApp"/> or automatic logging started
-/// activity tracking, keeps logging activation on every activity resume. Withdrawal fully applies
-/// on the next process start. Until then, stop calling the <c>Log*</c> methods and set
-/// <see cref="FacebookAppEventsFlushBehavior.ExplicitOnly"/> without calling <see cref="Flush"/>.
+/// keeps flushing queued events and keeps activity tracking running.
+/// <see cref="SetAutoLogAppEventsEnabled"/> with <see langword="false"/> stops the automatic events
+/// (activation, deactivation, purchases) at once. Withdrawal fully applies on the next process start. Until then, stop calling the
+/// <c>Log*</c> methods and set <see cref="FacebookAppEventsFlushBehavior.ExplicitOnly"/> without
+/// calling <see cref="Flush"/>.
 /// </para>
 /// <para>
 /// Every setter, the identity methods and the event methods throw
@@ -129,11 +130,18 @@ public static class FacebookAppEvents
 
 	/// <summary>
 	/// Sets the persisted automatic App Events logging flag. <see langword="true"/> starts activity
-	/// tracking, which requires an initialized SDK. Automatic logging covers the install ping, app
-	/// activation and, when enabled in Events Manager, in-app purchases and subscriptions.
-	/// <see langword="false"/> does not stop activity tracking already started in this process; it
-	/// applies from the next process start.
+	/// tracking, which requires an initialized SDK. Automatic logging covers the SDK's automatic
+	/// events: app activation and deactivation (also when <see cref="ActivateApp"/> started
+	/// tracking) and, when enabled on the Android card of the Meta App Dashboard, in-app purchases and
+	/// subscriptions. It does not send the install ping; <see cref="ActivateApp"/> does.
+	/// <see langword="false"/> stops automatic events at once (the SDK checks the flag for each one)
+	/// but leaves activity tracking running until the process ends.
 	/// </summary>
+	/// <remarks>
+	/// The value persists across launches. The effective value (<see cref="IsAutoLogAppEventsEnabled"/>)
+	/// is <see langword="false"/> when either this value or the Events Manager setting cached by the SDK
+	/// is disabled.
+	/// </remarks>
 	public static void SetAutoLogAppEventsEnabled(bool enabled) =>
 		CallVoid("setAutoLogAppEventsEnabled", "(Z)V", new JValue(enabled));
 
@@ -198,16 +206,17 @@ public static class FacebookAppEvents
 	}
 
 	/// <summary>
-	/// Sends the one-time install ping and starts activation tracking
-	/// (<c>AppEventsLogger.activateApp</c>): the SDK logs <c>fb_mobile_activate_app</c> and
-	/// deactivation from the next activity resume on. An activity already resumed when this runs is
-	/// not counted, so call it on every launch before the first activity resumes, for example from
+	/// Sends the one-time install ping and starts activity tracking
+	/// (<c>AppEventsLogger.activateApp</c>). App opens (<c>fb_mobile_activate_app</c>) and
+	/// deactivation are automatic events: the SDK logs them from the next activity resume on only
+	/// while <see cref="SetAutoLogAppEventsEnabled"/> is <see langword="true"/>. With automatic
+	/// logging off, this measures the install only. An activity already resumed when this runs is not
+	/// counted, so call it on every launch before the first activity resumes, for example from
 	/// <c>Application.OnCreate</c> or <c>MainActivity.OnCreate</c>. When it runs right after a consent
-	/// dialog, that session is only counted from the next resume. Use it when automatic logging is
-	/// disabled and the consumer still wants install and launch measurement. Call it once the SDK is
-	/// fully initialized (<see cref="SetAutoInitEnabled"/> or <see cref="InitializeSdk"/>); before
-	/// that the SDK discards the install ping response and only retries on a later activation.
-	/// Tracking cannot be stopped until the process ends.
+	/// dialog, that session is only counted from the next resume. Call it once the SDK is fully
+	/// initialized (<see cref="SetAutoInitEnabled"/> or <see cref="InitializeSdk"/>); before that the
+	/// SDK discards the install ping response and only retries on a later activation. Tracking cannot
+	/// be stopped until the process ends.
 	/// </summary>
 	public static void ActivateApp(Context? context = null) =>
 		CallVoid("activateApp", "(Landroid/content/Context;)V", new JValue(ResolveContext(context)));

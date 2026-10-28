@@ -112,7 +112,7 @@ value, and a persisted value wins over the manifest on later launches.
 | Manifest `meta-data` (`com.facebook.sdk.`) | Runtime API | Effect |
 | --- | --- | --- |
 | `AutoInitEnabled` | `SetAutoInitEnabled`, `IsAutoInitEnabled` | `false` keeps the SDK from fully initializing; the SDK does not process Graph API responses until then. |
-| `AutoLogAppEventsEnabled` | `SetAutoLogAppEventsEnabled`, `IsAutoLogAppEventsEnabled` | Automatic install ping, app activation and, when Events Manager allows it, Google Play purchase and subscription events. Since 19.0.0 a local `false` wins over Events Manager. |
+| `AutoLogAppEventsEnabled` | `SetAutoLogAppEventsEnabled`, `IsAutoLogAppEventsEnabled` | The SDK's automatic events: app activation and deactivation (`fb_mobile_activate_app`, `fb_mobile_deactivate_app`, even when `ActivateApp()` started tracking) and, when the App Dashboard allows it, Google Play purchase and subscription events. It does not cover the install ping, which only `ActivateApp()` sends. The effective value is the local value and the Events Manager value: since 19.0.0 a local `false` always wins, and disabling automatic SDK event logging in Events Manager overrides a local `true`. |
 | `AdvertiserIDCollectionEnabled` | `SetAdvertiserIdCollectionEnabled`, `IsAdvertiserIdCollectionEnabled` | Advertising ID collection. |
 | `AutoLogMetaDataEnabled` | `SetMetadataCollectionEnabled`, `IsMetadataCollectionEnabled` | SDK 19.0.0+: attaches the screen title and AppLink URL to events. `false` also discards what was collected. |
 | `AutoLogProductImprovementEnabled` | `SetAutoLogProductImprovementEnabled`, `IsAutoLogProductImprovementEnabled` | SDK 19.0.0+: control for product-improvement data. The 19.0.0 changelog says the SDK does not collect such data yet. |
@@ -143,16 +143,33 @@ SDK (see the strictest setup below).
    {
        FacebookAppEvents.SetAutoInitEnabled(true);
        FacebookAppEvents.SetAdvertiserIdCollectionEnabled(true);
-       // Either let the SDK log automatically ...
-       // FacebookAppEvents.SetAutoLogAppEventsEnabled(true);
-       // ... or keep automatic logging off and log activation yourself. ActivateApp()
-       // sends the one-time install ping and starts activation tracking, which logs
-       // fb_mobile_activate_app from the next activity resume on. Call it after
-       // auto-init is enabled, or the SDK discards the ping response.
-       FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
+       // App opens (fb_mobile_activate_app) are automatic events: they need
+       // automatic logging on.
+       FacebookAppEvents.SetAutoLogAppEventsEnabled(true);
+       // One-time install ping, and activity tracking. Call it after auto-init
+       // is enabled, or the SDK discards the ping response.
        FacebookAppEvents.ActivateApp();
    }
    ```
+
+   `ActivateApp()` alone does not measure app opens. It sends the install ping
+   and starts activity tracking, but facebook-core 19.0.0 logs the activation
+   and deactivation events through its automatic-event path, which drops them
+   while automatic logging is off. With `SetAutoLogAppEventsEnabled(false)`,
+   the app reports the install and nothing else.
+
+   Automatic logging also turns on automatic Google Play purchase and
+   subscription logging. When a server already reports purchases (see
+   [Avoid double counting](#avoid-double-counting-with-server-side-events)),
+   set "Log In-App Purchases Automatically" and "Log In-App Subscriptions
+   Automatically" to "No" on the Android card of the Meta App Dashboard
+   (Settings > Basic) before you enable it. In Events Manager, leave the
+   dataset's automatic SDK event logging setting unspecified so the app
+   decides: disabling it there overrides a local `true` once the SDK cached
+   the app settings, and app opens stop.
+
+   `SetAutoLogAppEventsEnabled` persists its value across launches, so the
+   withdrawal branch must set it back to `false` (step 3).
 
    When consent is first granted from a dialog, the activity is already
    resumed, so that session's activation is only counted from the next resume.
@@ -172,18 +189,17 @@ SDK (see the strictest setup below).
    ```
 
    Withdrawal fully takes effect on the next process start. Until then the
-   SDK stays fully initialized: it keeps flushing queued events and, once
-   `ActivateApp()` or automatic logging started activity tracking, keeps
-   logging `fb_mobile_activate_app` and deactivation on every resume; none of
-   the switches above stops that. So:
+   SDK stays fully initialized and keeps flushing queued events. Activity
+   tracking keeps running too, but `SetAutoLogAppEventsEnabled(false)` stops
+   the activation, deactivation and automatic purchase events at once: the SDK
+   checks the flag for every automatic event. So:
 
    - gate your own `Log*` calls on the consent state, so manual events stop at
      once;
    - set `ExplicitOnly` and do not call `Flush()` until the process restarts,
      so nothing more is sent in this process;
-   - events already queued (including the activation events logged meanwhile)
-     stay in the SDK's disk queue, and a later fully initialized session (after
-     consent is granted again) sends them.
+   - events already queued stay in the SDK's disk queue, and a later fully
+     initialized session (after consent is granted again) sends them.
 
    The SDK cannot delete events it already sent; that goes through Meta's data
    deletion process.
@@ -247,9 +263,12 @@ event ID shared by both sides, and such integrations do not coordinate one with
 the SDK. When a server already sends trial, subscription or purchase events:
 
 - do not log those events from the app as well;
-- disable automatic purchase logging: keep `AutoLogAppEventsEnabled=false` and
-  call `ActivateApp()` (install and activation are still measured), and/or set
-  "Log In-App Events Automatically" to "No" in the Meta App Dashboard.
+- disable automatic purchase logging on the Android card of the Meta App
+  Dashboard (Settings > Basic): "Log In-App Purchases Automatically" and "Log
+  In-App Subscriptions Automatically" on "No". Keep `AutoLogAppEventsEnabled`
+  on after consent if you measure app opens: they are automatic events too.
+  With `AutoLogAppEventsEnabled=false`, `ActivateApp()` only measures the
+  install.
 
 ### Identity
 
