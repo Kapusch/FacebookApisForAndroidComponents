@@ -44,12 +44,15 @@ the untracked `strings.xml` only; never commit them.
 The manifest template sets every automatic collection switch to `false`
 (`AutoInitEnabled`, `AutoLogAppEventsEnabled`, `AdvertiserIDCollectionEnabled`,
 `AutoLogMetaDataEnabled`, `AutoLogProductImprovementEnabled`). The sample's
-"Grant ads consent" button enables auto-init and advertiser ID collection, then
-calls `ActivateApp()` with automatic logging still off (activation is logged
-from the next resume on); "Withdraw ads consent" reverts them and sets the
-flush behavior to `ExplicitOnly`, because the SDK keeps tracking activation
-until the process restarts. Debug builds enable `SetDebugLoggingEnabled(true)`, so logged and
-flushed events appear in `adb logcat`. Use Meta Events Manager > Test events to
+"Grant ads consent" button enables auto-init, advertiser ID collection and
+automatic logging, then calls `ActivateApp()` (install ping; activation is
+logged from the next resume on, and only while automatic logging is on);
+"Withdraw ads consent" reverts them and sets the flush behavior to
+`ExplicitOnly`, because the SDK keeps flushing queued events until the process
+restarts. Automatic logging also enables automatic purchase logging: turn it
+off on the Android card of the Meta App Dashboard if you test purchases. Debug
+builds enable `SetDebugLoggingEnabled(true)`, so logged and flushed events
+appear in `adb logcat`. Use Meta Events Manager > Test events to
 confirm delivery.
 
 ### Access token attribution check
