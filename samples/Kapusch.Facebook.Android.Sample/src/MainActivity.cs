@@ -86,11 +86,12 @@ public sealed class MainActivity : Activity
 		FacebookAppEvents.SetFlushBehavior(FacebookAppEventsFlushBehavior.Auto);
 		FacebookAppEvents.SetAutoInitEnabled(true);
 		FacebookAppEvents.SetAdvertiserIdCollectionEnabled(true);
-		// Keep automatic logging off (no purchase auto-logging) and log activation explicitly.
-		// ActivateApp sends the one-time install ping and logs activation from the next activity
-		// resume on; this screen is already resumed, so the current session is not counted. A real
+		// App opens are automatic events, so they need automatic logging on. Turn automatic purchase
+		// logging off in the Meta App Dashboard when a server reports purchases.
+		FacebookAppEvents.SetAutoLogAppEventsEnabled(true);
+		// ActivateApp sends the one-time install ping; activations are logged from the next activity
+		// resume on. This screen is already resumed, so the current session is not counted. A real
 		// app calls it on every launch with consent, before the first activity resumes.
-		FacebookAppEvents.SetAutoLogAppEventsEnabled(false);
 		FacebookAppEvents.ActivateApp();
 	}
 
@@ -101,8 +102,9 @@ public sealed class MainActivity : Activity
 		FacebookAppEvents.SetAutoInitEnabled(false);
 		FacebookAppEvents.ClearUserId();
 		FacebookAppEvents.ClearUserData();
-		// The SDK stays fully initialized and keeps tracking activation until the process restarts.
-		// Stop sending for this process; a real app also stops calling the Log* methods.
+		// Automatic events stop at once, but the SDK stays fully initialized and keeps flushing queued
+		// events until the process restarts. Stop sending for this process; a real app also stops
+		// calling the Log* methods.
 		FacebookAppEvents.SetFlushBehavior(FacebookAppEventsFlushBehavior.ExplicitOnly);
 	}
 
